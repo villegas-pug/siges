@@ -1408,14 +1408,8 @@ export default {
                     });
                 });
 
-                //  limpiar respuestas ocultas
-                this.secciones.forEach(sec => {
-                    sec.preguntas.forEach(p => {
-                        if (!this.mostrarPregunta2(p)) {
-                            p.respuesta2 = null
-                        }
-                    })
-                })
+                // limpiar respuestas ocultas solo en modo NUEVO
+                this.limpiarRespuestasOcultas()
                 // VALIDAR OBLIGATORIOS
                 for (const seccion of this.secciones) {
                     for (const pregunta of seccion.preguntas) {
@@ -1492,18 +1486,13 @@ export default {
                             })(),
 
                             // 🔹 RESPUESTA 2
-                            respuesta2: this.mostrarPregunta2(p)
-                                ? (() => {
-
-                                    // OTRO en pregunta2 (si aplica)
-                                    if (p.respuesta2 === 'OTRO' || p.respuesta2 === 'OTROS') {
-                                        return p.otroTexto2 || p.respuesta2
-                                    }
-
-                                    return p.respuesta2 ?? null
-
-                                })()
-                                : null,
+                            respuesta2: (() => {
+                                // OTRO en pregunta2 (si aplica)
+                                if (p.respuesta2 === 'OTRO' || p.respuesta2 === 'OTROS') {
+                                    return p.otroTexto2 || p.respuesta2
+                                }
+                                return p.respuesta2 ?? null
+                            })(),
 
                             observacion: null,
                             puntaje: null
@@ -1859,26 +1848,41 @@ export default {
 
             return reglas
         },
-        mostrarPregunta2(pregunta) {
+        limpiarRespuestasOcultas() {
+            if (this.modo !== 'nuevo') return
 
+            this.secciones.forEach(sec => {
+                sec.preguntas.forEach(p => {
+                    if (!this.mostrarPregunta(p)) {
+                        switch (p.tipoControl) {
+                            case 'text':    p.respuesta = ''; break
+                            case 'selectM': p.respuesta = []; break
+                            default:        p.respuesta = null; break
+                        }
+                    }
+                    if (!this.mostrarPregunta2(p)) {
+                        p.respuesta2 = null
+                    }
+                })
+            })
+        },
+
+        mostrarPregunta2(pregunta) {
             if (!pregunta.pregunta2) return false
 
             const resp = pregunta.respuesta
             if (!resp) {
-                pregunta.respuesta2 = null // 🔥 limpiar
+                if (this.modo === 'nuevo') this.$set(pregunta, 'respuesta2', null)
                 return false
             }
 
             const cond = pregunta.condicion
-
             if (!cond) return true
 
             if (cond.id) {
-
                 const preguntaBase = this.buscarPregunta(cond.id)
-
                 if (!preguntaBase || !preguntaBase.respuesta) {
-                    pregunta.respuesta2 = null // 🔥 limpiar
+                    if (this.modo === 'nuevo') this.$set(pregunta, 'respuesta2', null)
                     return false
                 }
 
@@ -1886,7 +1890,7 @@ export default {
 
                 if (!isNaN(cond.valor)) {
                     const cumple = Number(valorBase) >= Number(cond.valor)
-                    if (!cumple) pregunta.respuesta2 = null
+                    if (!cumple && this.modo === 'nuevo') this.$set(pregunta, 'respuesta2', null)
                     return cumple
                 }
 
@@ -1894,8 +1898,7 @@ export default {
                 const condValor = cond.valor.toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 
                 const cumple = base === condValor
-                if (!cumple) pregunta.respuesta2 = null
-
+                if (!cumple && this.modo === 'nuevo') this.$set(pregunta, 'respuesta2', null)
                 return cumple
             }
 
@@ -1903,9 +1906,7 @@ export default {
             const condValor = cond.valor?.toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
 
             const cumple = valor === condValor
-
-            if (!cumple) pregunta.respuesta2 = null // 🔥 limpiar
-
+            if (!cumple && this.modo === 'nuevo') this.$set(pregunta, 'respuesta2', null)
             return cumple
         },
         mostrarPregunta(pregunta) {
@@ -1920,9 +1921,25 @@ export default {
             const preguntaBase = this.buscarPregunta(cond.id)
 
             // Si la pregunta base no existe o no tiene respuesta válida, ocultar la condicional
-            if (!preguntaBase) return false
+            if (!preguntaBase) {
+                if (this.modo === 'nuevo') {
+                    switch (pregunta.tipoControl) {
+                        case 'text':    this.$set(pregunta, 'respuesta', ''); break
+                        case 'selectM': this.$set(pregunta, 'respuesta', []); break
+                        default:        this.$set(pregunta, 'respuesta', null); break
+                    }
+                }
+                return false
+            }
             const baseRespuesta = preguntaBase.respuesta
             if (baseRespuesta === null || baseRespuesta === undefined || baseRespuesta === '') {
+                if (this.modo === 'nuevo') {
+                    switch (pregunta.tipoControl) {
+                        case 'text':    this.$set(pregunta, 'respuesta', ''); break
+                        case 'selectM': this.$set(pregunta, 'respuesta', []); break
+                        default:        this.$set(pregunta, 'respuesta', null); break
+                    }
+                }
                 return false
             }
 
@@ -1930,11 +1947,27 @@ export default {
 
             // NUMÉRICO
             if (!isNaN(cond.valor)) {
-                return Number(valorBase) >= Number(cond.valor)
+                const cumple = Number(valorBase) >= Number(cond.valor)
+                if (!cumple && this.modo === 'nuevo') {
+                    switch (pregunta.tipoControl) {
+                        case 'text':    this.$set(pregunta, 'respuesta', ''); break
+                        case 'selectM': this.$set(pregunta, 'respuesta', []); break
+                        default:        this.$set(pregunta, 'respuesta', null); break
+                    }
+                }
+                return cumple
             }
 
             // TEXTO (soporta base simple, base array, condicion simple y condicion array)
-            return this.normalizarCondicion(valorBase, cond.valor)
+            const cumple = this.normalizarCondicion(valorBase, cond.valor)
+            if (!cumple && this.modo === 'nuevo') {
+                switch (pregunta.tipoControl) {
+                    case 'text':    this.$set(pregunta, 'respuesta', ''); break
+                    case 'selectM': this.$set(pregunta, 'respuesta', []); break
+                    default:        this.$set(pregunta, 'respuesta', null); break
+                }
+            }
+            return cumple
         },
         buscarPregunta(id) {
             for (const seccion of this.secciones) {
