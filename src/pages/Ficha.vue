@@ -980,6 +980,8 @@ export default {
                                 p.respuesta = p.respuesta || null;
                                 break;
                         }
+
+                        p.condicion = this.parseCondicion(p.condicion);
                     });
                 });
 
@@ -1917,9 +1919,11 @@ export default {
 
             const preguntaBase = this.buscarPregunta(cond.id)
 
-            // 🔥 CLAVE: si aún no hay respuesta → mostrar (no ocultar)
-            if (!preguntaBase || !preguntaBase.respuesta) {
-                return true
+            // Si la pregunta base no existe o no tiene respuesta válida, ocultar la condicional
+            if (!preguntaBase) return false
+            const baseRespuesta = preguntaBase.respuesta
+            if (baseRespuesta === null || baseRespuesta === undefined || baseRespuesta === '') {
+                return false
             }
 
             const valorBase = preguntaBase.respuesta
