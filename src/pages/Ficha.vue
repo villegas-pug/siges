@@ -1933,23 +1933,8 @@ export default {
                 return Number(valorBase) >= Number(cond.valor)
             }
 
-            // TEXTO
-            const base = valorBase.toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-
-            // 🔥 ARRAY
-            if (Array.isArray(cond.valor)) {
-
-                const valores = cond.valor.map(v =>
-                    v.toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-                )
-
-                return valores.includes(base)
-            }
-
-            // 🔹 SIMPLE
-            const condValor = cond.valor.toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-
-            return base === condValor
+            // TEXTO (soporta base simple, base array, condicion simple y condicion array)
+            return this.normalizarCondicion(valorBase, cond.valor)
         },
         buscarPregunta(id) {
             for (const seccion of this.secciones) {
@@ -1957,6 +1942,15 @@ export default {
                 if (p) return p
             }
             return null
+        },
+        normalizarCondicion(valorBase, condValor) {
+            const n = v => v?.toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+            const bases = Array.isArray(valorBase) ? valorBase : [valorBase];
+            const conds = Array.isArray(condValor) ? condValor : [condValor];
+            const baseVals = bases.map(n).filter(v => v !== '');
+            const condVals = conds.map(n).filter(v => v !== '');
+            if (baseVals.length === 0 || condVals.length === 0) return false;
+            return baseVals.some(b => condVals.includes(b));
         },
         parseCondicion(condicion) {
 
