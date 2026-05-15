@@ -169,11 +169,11 @@
                                 <!-- ============================= -->
 
                                 <q-expansion-item label="I. DATOS GENERALES DEL SERVICIO" default-opened
-                                    expand-separator header-class="bg-red-5 text-white q-mt-sm"
+                                    expand-separator header-class="bg-red-5 text-white q-mt-sm header-seccion"
                                     expand-icon-class="text-white">
 
                                     <q-card-section class="q-pa-md">
-                                        <q-markup-table bordered dense class="rounded-borders">
+                                        <q-markup-table bordered dense class="rounded-borders datos-generales-tabla">
                                             <tbody>
 
                                                 <tr v-if="mostrarModalidad">
@@ -318,15 +318,15 @@
 
                                     <q-expansion-item v-for="(seccion, index) in secciones" :key="index"
                                         :label="seccion.titulo" expand-separator
-                                        header-class="bg-red-5 text-white q-mt-sm" expand-icon-class="text-white">
+                                        header-class="bg-red-5 text-white q-mt-sm header-seccion seccion-expansion" expand-icon-class="text-white">
                                         <div class="q-pa-md">
 
                                             <!-- CABECERA -->
-                                            <div class="row q-mb-sm text-weight-bold text-grey-7">
-                                                <div class="col-6">
+                                            <div class="row seccion-cabecera q-mb-sm text-weight-bold text-grey-7">
+                                                <div class="col-12 col-sm-5">
                                                     Pregunta
                                                 </div>
-                                                <div class="col-6">
+                                                <div class="col-12 col-sm-7">
                                                     Respuesta
                                                 </div>
                                             </div>
@@ -340,16 +340,18 @@
 
                                                 <!-- SUBTITULO -->
                                                 <div v-if="pregunta.tipoControl === 'label'"
-                                                    class="col-12 text-body2 text-weight-bold text-uppercase q-mt-md">
+                                                    class="col-12 pregunta-label">
+                                                    <span class="text-body2 text-weight-bold text-uppercase">
                                                     {{ pregunta.pregunta }}
+                                                    </span>
                                                 </div>
 
                                                 <!-- SELECT -->
                                                 <template v-else-if="pregunta.tipoControl === 'select'">
-                                                    <div class="col-6 text-body2">
+                                                    <div class="col-12 col-sm-5 text-body2 fila-pregunta tipo-select">
                                                         {{ pregunta.pregunta }}
                                                     </div>
-                                                    <div class="col-6">
+                                                    <div class="col-12 col-sm-7 fila-pregunta tipo-select">
                                                         <q-select outlined dense
                                                             :value="pregunta.respuesta"
                                                             @input="val => $set(pregunta, 'respuesta', val)"
@@ -367,10 +369,10 @@
 
                                                 <!-- SELECT MULTIPLE -->
                                                 <template v-else-if="pregunta.tipoControl === 'selectM'">
-                                                    <div class="col-6 text-body2">
+                                                    <div class="col-12 col-sm-5 text-body2 fila-pregunta tipo-selectM">
                                                         {{ pregunta.pregunta }}
                                                     </div>
-                                                    <div class="col-6">
+                                                    <div class="col-12 col-sm-7 fila-pregunta tipo-selectM">
                                                         <q-select outlined dense multiple
                                                             :value="pregunta.respuesta"
                                                             @input="val => $set(pregunta, 'respuesta', val)"
@@ -381,10 +383,10 @@
 
                                                 <!-- TEXT -->
                                                 <template v-else-if="pregunta.tipoControl === 'text'">
-                                                    <div class="col-6 text-body2">
+                                                    <div class="col-12 col-sm-5 text-body2 fila-pregunta tipo-text">
                                                         {{ pregunta.pregunta }}
                                                     </div>
-                                                    <div class="col-6">
+                                                    <div class="col-12 col-sm-7 fila-pregunta tipo-text">
                                                         <q-input outlined dense
                                                             :value="pregunta.respuesta"
                                                             @input="val => $set(pregunta, 'respuesta', val)"
@@ -397,11 +399,11 @@
                                                 <!-- RADIO -->
                                                 <template v-else-if="pregunta.tipoControl === 'radio'">
 
-                                                    <div class="col-6 text-body2">
+                                                    <div class="col-12 col-sm-5 text-body2 fila-pregunta tipo-radio">
                                                         {{ pregunta.pregunta }}
                                                     </div>
 
-                                                    <div class="col-6">
+                                                    <div class="col-12 col-sm-7 fila-pregunta tipo-radio">
 
                                                         <q-option-group
                                                             :value="pregunta.respuesta"
@@ -418,11 +420,11 @@
                                                 <template v-if="mostrarPregunta2(pregunta)"
                                                     class="col-12 q-mt-sm">
 
-                                                    <div class="col-6 text-body2 q-mb-xs">
+                                                    <div class="col-12 col-sm-5 text-body2 q-mb-xs fila-pregunta tipo-text">
                                                         {{ pregunta.pregunta2 }}
                                                     </div>
 
-                                                    <div class="col-6">
+                                                    <div class="col-12 col-sm-7 fila-pregunta tipo-text">
                                                         <!-- TEXT -->
                                                         <q-input v-if="pregunta.tipoControl2 === 'text'" outlined dense
                                                             v-model="pregunta.respuesta2" :disable="esVisualizacion"
@@ -449,45 +451,25 @@
                                         </div>
                                     </q-expansion-item>
 
-                                    <div v-if="mostrarTotales" class="row q-col-gutter-md q-mt-md bg-grey-2 q-pa-sm">
-
-                                        <div class="q-mt-md">
-
-                                            <div class="text-weight-bold">TOTAL</div>
-
+                                    <div v-if="mostrarTotales" class="totales-container">
+                                        <div class="totales-header">
+                                            <div class="text-weight-bold">RESUMEN DE EVALUACIÓN</div>
                                         </div>
-
-                                    </div>
-                                    <div v-if="mostrarTotales" class="row q-col-gutter-md q-mt-md bg-grey-2 q-pa-sm">
-                                        <div class="col-6 text-bold">
-                                            CONFORME
+                                        <div class="totales-row conforme">
+                                            <div class="text-bold">CONFORME</div>
+                                            <div class="text-right">{{ totalesRespuestas.CONFORME }}</div>
                                         </div>
-                                        <div class="col-6 text-right text-weight-bold text-primary">
-                                            {{ totalesRespuestas.CONFORME }}
+                                        <div class="totales-row no-conforme">
+                                            <div class="text-bold">NO CONFORME</div>
+                                            <div class="text-right">{{ totalesRespuestas.NO_CONFORME }}</div>
                                         </div>
-                                    </div>
-                                    <div v-if="mostrarTotales" class="row q-col-gutter-md q-mt-md bg-grey-2 q-pa-sm">
-                                        <div class="col-6 text-bold">
-                                            NO CONFORME
+                                        <div class="totales-row observacion">
+                                            <div class="text-bold">OBSERVACIÓN</div>
+                                            <div class="text-right">{{ totalesRespuestas.OBSERVACION }}</div>
                                         </div>
-                                        <div class="col-6 text-right text-weight-bold text-primary">
-                                            {{ totalesRespuestas.NO_CONFORME }}
-                                        </div>
-                                    </div>
-                                    <div v-if="mostrarTotales" class="row q-col-gutter-md q-mt-md bg-grey-2 q-pa-sm">
-                                        <div class="col-6 text-bold">
-                                            OBSERVACIÓN
-                                        </div>
-                                        <div class="col-6 text-right text-weight-bold text-primary">
-                                            {{ totalesRespuestas.OBSERVACION }}
-                                        </div>
-                                    </div>
-                                    <div v-if="mostrarTotales" class="row q-col-gutter-md q-mt-md bg-grey-2 q-pa-sm">
-                                        <div class="col-6 text-bold">
-                                            NO APLICA
-                                        </div>
-                                        <div class="col-6 text-right text-weight-bold text-primary">
-                                            {{ totalesRespuestas.NO_APLICA }}
+                                        <div class="totales-row no-aplica">
+                                            <div class="text-bold">NO APLICA</div>
+                                            <div class="text-right">{{ totalesRespuestas.NO_APLICA }}</div>
                                         </div>
                                     </div>
 
@@ -559,6 +541,205 @@
         </div>
 
     </template>
+
+<style scoped>
+.seccion-cabecera {
+    background-color: #f0f4f8;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 16px;
+    border-left: 4px solid #DEE8F5;
+}
+
+.seccion-cabecera .col-6 {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.fila-pregunta {
+    padding: 12px 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+    border-left: 3px solid transparent;
+}
+
+.fila-pregunta:nth-child(odd) {
+    background-color: #fafafa;
+}
+
+.fila-pregunta:nth-child(even) {
+    background-color: #ffffff;
+}
+
+.fila-pregunta:hover {
+    background-color: #f5f5f5;
+}
+
+.fila-pregunta.tipo-select {
+    border-left-color: #3498db;
+}
+
+.fila-pregunta.tipo-text {
+    border-left-color: #27ae60;
+}
+
+.fila-pregunta.tipo-radio {
+    border-left-color: #e74c3c;
+}
+
+.fila-pregunta.tipo-selectM {
+    border-left-color: #9b59b6;
+}
+
+.fila-pregunta.tipo-label {
+    border-left-color: #f39c12;
+}
+
+.pregunta-label {
+    background-color: #fff3cd;
+    padding: 16px;
+    margin-top: 16px;
+    margin-bottom: 12px;
+    border-radius: 4px;
+    border-left: 4px solid #f39c12;
+}
+
+.pregunta-label .text-body2 {
+    color: #856404;
+    font-weight: 600;
+}
+
+.datos-generales-tabla tbody tr:nth-child(odd) {
+    background-color: #f8f9fa;
+}
+
+.datos-generales-tabla tbody tr:hover {
+    background-color: #e9ecef;
+}
+
+.datos-generales-tabla td:first-child {
+    background-color: #DEE8F5;
+    font-weight: 600;
+    color: #2c3e50;
+    min-width: 180px;
+}
+
+.datos-generales-tabla .q-icon {
+    color: #DEE8F5;
+    margin-right: 8px;
+}
+
+.datos-generales-tabla td:last-child {
+    padding-left: 16px;
+}
+
+.seccion-expansion {
+    margin-bottom: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.seccion-expansion .q-expansion-item__content {
+    border-left: 4px solid #BF0411;
+}
+
+.header-seccion {
+    background: linear-gradient(135deg, #BF0411 0%, #d63031 100%);
+}
+
+.header-seccion:hover {
+    background: linear-gradient(135deg, #a3030f 0%, #c0392b 100%);
+}
+
+.totales-container {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 20px;
+    border: 1px solid #dee2e6;
+}
+
+.totales-header {
+    background: linear-gradient(135deg, #DEE8F5 0%, #c8d6e5 100%);
+    padding: 12px 16px;
+    border-radius: 6px 6px 0 0;
+    margin: -16px -16px 16px -16px;
+    border-bottom: 2px solid #BF0411;
+}
+
+.totales-header .text-weight-bold {
+    color: #2c3e50;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.totales-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.totales-row:hover {
+    transform: translateX(4px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.totales-row.conforme {
+    background-color: #d4edda;
+    border-left: 4px solid #28a745;
+}
+
+.totales-row.no-conforme {
+    background-color: #f8d7da;
+    border-left: 4px solid #dc3545;
+}
+
+.totales-row.observacion {
+    background-color: #fff3cd;
+    border-left: 4px solid #ffc107;
+}
+
+.totales-row.no-aplica {
+    background-color: #e2e3e5;
+    border-left: 4px solid #6c757d;
+}
+
+.totales-row .text-right {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+@media (max-width: 599px) {
+    .seccion-cabecera .col-6 {
+        font-size: 0.75rem;
+    }
+    
+    .fila-pregunta {
+        padding: 8px 4px;
+    }
+    
+    .fila-pregunta > div:first-child {
+        margin-bottom: 8px;
+    }
+}
+
+.q-markup-table {
+    font-size: 0.9rem;
+}
+
+.q-markup-table td {
+    padding: 10px 12px;
+}
+</style>
 
 <script>
 
