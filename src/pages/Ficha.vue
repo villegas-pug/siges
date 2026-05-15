@@ -350,7 +350,9 @@
                                                         {{ pregunta.pregunta }}
                                                     </div>
                                                     <div class="col-6">
-                                                        <q-select outlined dense v-model="pregunta.respuesta"
+                                                        <q-select outlined dense
+                                                            :value="pregunta.respuesta"
+                                                            @input="val => $set(pregunta, 'respuesta', val)"
                                                             :options="pregunta.opciones" emit-value map-options
                                                             :disable="esVisualizacion" style="border: none;"
                                                             :rules="pregunta.obligatoria ? [val => !!val || 'Debe seleccionar una opción'] : []" />
@@ -369,7 +371,9 @@
                                                         {{ pregunta.pregunta }}
                                                     </div>
                                                     <div class="col-6">
-                                                        <q-select outlined dense multiple v-model="pregunta.respuesta"
+                                                        <q-select outlined dense multiple
+                                                            :value="pregunta.respuesta"
+                                                            @input="val => $set(pregunta, 'respuesta', val)"
                                                             :options="pregunta.opciones" emit-value map-options
                                                             :disable="esVisualizacion" />
                                                     </div>
@@ -381,7 +385,9 @@
                                                         {{ pregunta.pregunta }}
                                                     </div>
                                                     <div class="col-6">
-                                                        <q-input outlined dense v-model="pregunta.respuesta"
+                                                        <q-input outlined dense
+                                                            :value="pregunta.respuesta"
+                                                            @input="val => $set(pregunta, 'respuesta', val)"
                                                             :disable="esVisualizacion"
                                                             :type="pregunta.tipoDato1 === 'NUMBER' ? 'number' : 'text'"
                                                             :rules="validarPregunta(pregunta)" style="border: none;" />
@@ -397,7 +403,9 @@
 
                                                     <div class="col-6">
 
-                                                        <q-option-group v-model="pregunta.respuesta"
+                                                        <q-option-group
+                                                            :value="pregunta.respuesta"
+                                                            @input="val => $set(pregunta, 'respuesta', val)"
                                                             :options="pregunta.opciones" type="radio" inline
                                                             :disable="esVisualizacion"
                                                             :rules="pregunta.obligatoria ? [val => !!val || 'Debe seleccionar una opción'] : []"
@@ -407,8 +415,8 @@
 
                                                 </template>
                                                 <!-- PREGUNTA 2 -->
-                                                <template v-if="mostrarPregunta2(pregunta)""
-                                                    class=" col-12 q-mt-sm">
+                                                <template v-if="mostrarPregunta2(pregunta)"
+                                                    class="col-12 q-mt-sm">
 
                                                     <div class="col-6 text-body2 q-mb-xs">
                                                         {{ pregunta.pregunta2 }}
@@ -944,9 +952,11 @@ export default {
                             case 'radio':
                             case 'select':
                                 if (p.respuesta != null && p.opciones.length > 0) {
-                                    // Normalizar para coincidencia insensible a mayúsculas
+                                    // Normalizar para coincidencia insensible a mayúsculas y tildes
+                                    const normalizar = str => str.toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+                                    const respNorm = normalizar(p.respuesta);
                                     const match = p.opciones.find(o =>
-                                        o.value.toString().toUpperCase() === p.respuesta.toString().toUpperCase()
+                                        normalizar(o.value) === respNorm
                                     );
                                     p.respuesta = match ? match.value : null;
                                 } else {
@@ -1386,6 +1396,16 @@ export default {
         async guardarTodo() {
 
             try {
+                // DEBUG: Verificar valores de selects antes de guardar
+                console.log('=== DEBUG GUARDAR TODO ===');
+                this.secciones.forEach(sec => {
+                    sec.preguntas.forEach(p => {
+                        if (p.tipoControl === 'select' || p.tipoControl === 'selectM' || p.tipoControl === 'radio') {
+                            console.log(`Pregunta ID ${p.idPregunta} (${p.tipoControl}): respuesta =`, p.respuesta);
+                        }
+                    });
+                });
+
                 //  limpiar respuestas ocultas
                 this.secciones.forEach(sec => {
                     sec.preguntas.forEach(p => {
@@ -1449,7 +1469,7 @@ export default {
 
                                 // 🔥 OTRO (simple)
                                 if (p.respuesta === 'OTRO' || p.respuesta === 'OTROS') {
-                                    return p.otroTexto || null
+                                    return p.otroTexto || p.respuesta
                                 }
 
                                 // 🔥 OTRO (multiple)
@@ -1458,7 +1478,7 @@ export default {
                                     if (p.respuesta.includes('OTRO') || p.respuesta.includes('OTROS')) {
 
                                         return p.respuesta
-                                            .map(r => (r === 'OTRO' || r === 'OTROS') ? p.otroTexto : r)
+                                            .map(r => (r === 'OTRO' || r === 'OTROS') ? (p.otroTexto || r) : r)
                                             .join('|')
                                     }
 
@@ -1475,7 +1495,7 @@ export default {
 
                                     // OTRO en pregunta2 (si aplica)
                                     if (p.respuesta2 === 'OTRO' || p.respuesta2 === 'OTROS') {
-                                        return p.otroTexto2 || null
+                                        return p.otroTexto2 || p.respuesta2
                                     }
 
                                     return p.respuesta2 ?? null
@@ -1488,6 +1508,10 @@ export default {
 
                         }))
                 );
+
+                // DEBUG: Confirmar valores finales del payload antes de enviar
+                console.log('=== PAYLOAD RESPUESTAS ===', respuestas);
+
                 /*
                                 const respuestas = this.secciones.flatMap(seccion =>
                                     seccion.preguntas.filter(p => this.mostrarPregunta(p)).map(p => ({
