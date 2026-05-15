@@ -144,25 +144,26 @@
                 </div>
             </div>
             <q-dialog v-model="dialog" persistent @hide="resetModo">
-                <q-card style="width: 60%; max-width: 60vw;">
+                <q-card class="ficha-dialog">
+                    <div class="ficha-scroll-wrapper">
 
-                    <!-- HEADER -->
-                    <q-card-section class="bg-inabif row items-center">
-                        <div class="text-h6">
+                        <!-- HEADER -->
+                        <q-card-section class="bg-inabif ficha-header">
+                        <div class="ficha-titulo">
                             {{ tituloAnexo }}
                         </div>
-                        <q-space />
-                        <q-btn icon="close" flat dense round v-close-popup />
+                        <q-btn class="ficha-cerrar" icon="close" flat dense round v-close-popup />
                     </q-card-section>
 
                     <!-- BODY -->
-                    <q-card-section class="scroll" style="height: 80vh">
+                        <q-card-section class="ficha-body" style="flex: 1; overflow-y: auto;">
 
                         <q-card flat>
 
                             <q-card-section>
-                                <div class="text-right"> <q-btn v-if="esVisualizacion" label="Descargar PDF"
-                                        icon="picture_as_pdf" color="green" @click="descargarPDF" /></div>
+                                <div v-if="esVisualizacion" class="ficha-pdf-bar">
+                                    <q-btn label="Descargar PDF" icon="picture_as_pdf" color="green" @click="descargarPDF" />
+                                </div>
 
                                 <!-- ============================= -->
                                 <!-- I. DATOS GENERALES (ACORDEÓN) -->
@@ -173,7 +174,8 @@
                                     expand-icon-class="text-white">
 
                                     <q-card-section class="q-pa-md">
-                                        <q-markup-table bordered dense class="rounded-borders datos-generales-tabla">
+                                        <div class="tabla-scroll-container">
+                                            <q-markup-table bordered dense class="rounded-borders datos-generales-tabla">
                                             <tbody>
 
                                                 <tr v-if="mostrarModalidad">
@@ -303,6 +305,7 @@
                                                 </tr>
                                             </tbody>
                                         </q-markup-table>
+                                        </div>
                                     </q-card-section>
                                 </q-expansion-item>
 
@@ -336,7 +339,7 @@
                                             <!-- PREGUNTAS -->
                                             <div v-for="pregunta in seccion.preguntas" :key="pregunta.idPregunta"
                                                 v-if="mostrarPregunta(pregunta)"
-                                                class="row q-col-gutter-md q-mb-sm items-center">
+                                                class="ficha-pregunta">
 
                                                 <!-- SUBTITULO -->
                                                 <div v-if="pregunta.tipoControl === 'label'"
@@ -348,97 +351,114 @@
 
                                                 <!-- SELECT -->
                                                 <template v-else-if="pregunta.tipoControl === 'select'">
-                                                    <div class="col-12 col-sm-5 text-body2 fila-pregunta tipo-select">
-                                                        {{ pregunta.pregunta }}
-                                                    </div>
-                                                    <div class="col-12 col-sm-7 fila-pregunta tipo-select">
-                                                        <q-select outlined dense
-                                                            :value="pregunta.respuesta"
-                                                            @input="val => $set(pregunta, 'respuesta', val)"
-                                                            :options="pregunta.opciones" emit-value map-options
-                                                            :disable="esVisualizacion" style="border: none;"
-                                                            :rules="pregunta.obligatoria ? [val => !!val || 'Debe seleccionar una opción'] : []" />
-
-                                                        <!-- <q-input
-                                                            v-if="pregunta.respuesta === 'OTRO' || pregunta.respuesta === 'OTROS'"
-                                                            v-model="pregunta.otroTexto" label="Especifique" outlined
-                                                            style="border: none;" dense
-                                                            :rules="pregunta.obligatoria ? [val => !!val || 'Debe responder otro'] : []" /> -->
+                                                    <div class="ficha-campo">
+                                                        <div class="ficha-label">
+                                                            {{ pregunta.pregunta }}
+                                                            <span v-if="pregunta.obligatoria === 1" class="ficha-obligatorio">*</span>
+                                                        </div>
+                                                        <div class="ficha-input" :class="{ 'modo-visualizacion': esVisualizacion }">
+                                                            <template v-if="esVisualizacion && pregunta.respuesta">
+                                                                <span class="ficha-valor">{{ pregunta.respuesta }}</span>
+                                                            </template>
+                                                            <q-select v-else outlined dense
+                                                                :value="pregunta.respuesta"
+                                                                @input="val => $set(pregunta, 'respuesta', val)"
+                                                                :options="pregunta.opciones" emit-value map-options
+                                                                :disable="esVisualizacion"
+                                                                :rules="pregunta.obligatoria ? [val => !!val || 'Debe seleccionar una opción'] : []" />
+                                                        </div>
                                                     </div>
                                                 </template>
 
                                                 <!-- SELECT MULTIPLE -->
                                                 <template v-else-if="pregunta.tipoControl === 'selectM'">
-                                                    <div class="col-12 col-sm-5 text-body2 fila-pregunta tipo-selectM">
-                                                        {{ pregunta.pregunta }}
-                                                    </div>
-                                                    <div class="col-12 col-sm-7 fila-pregunta tipo-selectM">
-                                                        <q-select outlined dense multiple
-                                                            :value="pregunta.respuesta"
-                                                            @input="val => $set(pregunta, 'respuesta', val)"
-                                                            :options="pregunta.opciones" emit-value map-options
-                                                            :disable="esVisualizacion" />
+                                                    <div class="ficha-campo">
+                                                        <div class="ficha-label">
+                                                            {{ pregunta.pregunta }}
+                                                            <span v-if="pregunta.obligatoria === 1" class="ficha-obligatorio">*</span>
+                                                        </div>
+                                                        <div class="ficha-input" :class="{ 'modo-visualizacion': esVisualizacion }">
+                                                            <template v-if="esVisualizacion && pregunta.respuesta && pregunta.respuesta.length">
+                                                                <div class="ficha-tags">
+                                                                    <span v-for="item in pregunta.respuesta" :key="item" class="ficha-tag">{{ item }}</span>
+                                                                </div>
+                                                            </template>
+                                                            <q-select v-else outlined dense multiple
+                                                                :value="pregunta.respuesta"
+                                                                @input="val => $set(pregunta, 'respuesta', val)"
+                                                                :options="pregunta.opciones" emit-value map-options
+                                                                :disable="esVisualizacion" />
+                                                        </div>
                                                     </div>
                                                 </template>
 
                                                 <!-- TEXT -->
                                                 <template v-else-if="pregunta.tipoControl === 'text'">
-                                                    <div class="col-12 col-sm-5 text-body2 fila-pregunta tipo-text">
-                                                        {{ pregunta.pregunta }}
-                                                    </div>
-                                                    <div class="col-12 col-sm-7 fila-pregunta tipo-text">
-                                                        <q-input outlined dense
-                                                            :value="pregunta.respuesta"
-                                                            @input="val => $set(pregunta, 'respuesta', val)"
-                                                            :disable="esVisualizacion"
-                                                            :type="pregunta.tipoDato1 === 'NUMBER' ? 'number' : 'text'"
-                                                            :rules="validarPregunta(pregunta)" style="border: none;" />
+                                                    <div class="ficha-campo">
+                                                        <div class="ficha-label">
+                                                            {{ pregunta.pregunta }}
+                                                            <span v-if="pregunta.obligatoria === 1" class="ficha-obligatorio">*</span>
+                                                        </div>
+                                                        <div class="ficha-input" :class="{ 'modo-visualizacion': esVisualizacion }">
+                                                            <template v-if="esVisualizacion">
+                                                                <span class="ficha-valor">{{ pregunta.respuesta || '—' }}</span>
+                                                            </template>
+                                                            <q-input v-else outlined dense
+                                                                :value="pregunta.respuesta"
+                                                                @input="val => $set(pregunta, 'respuesta', val)"
+                                                                :disable="esVisualizacion"
+                                                                :type="pregunta.tipoDato1 === 'NUMBER' ? 'number' : 'text'"
+                                                                :rules="validarPregunta(pregunta)" />
+                                                        </div>
                                                     </div>
                                                 </template>
 
                                                 <!-- RADIO -->
                                                 <template v-else-if="pregunta.tipoControl === 'radio'">
 
-                                                    <div class="col-12 col-sm-5 text-body2 fila-pregunta tipo-radio">
-                                                        {{ pregunta.pregunta }}
+                                                    <div class="ficha-campo">
+                                                        <div class="ficha-label">
+                                                            {{ pregunta.pregunta }}
+                                                            <span v-if="pregunta.obligatoria === 1" class="ficha-obligatorio">*</span>
+                                                        </div>
+                                                        <div class="ficha-input" :class="{ 'modo-visualizacion': esVisualizacion }">
+                                                            <template v-if="esVisualizacion && pregunta.respuesta">
+                                                                <span class="ficha-valor">{{ pregunta.respuesta }}</span>
+                                                            </template>
+                                                            <q-option-group v-else
+                                                                :value="pregunta.respuesta"
+                                                                @input="val => $set(pregunta, 'respuesta', val)"
+                                                                :options="pregunta.opciones" type="radio" inline
+                                                                :disable="esVisualizacion"
+                                                                :rules="pregunta.obligatoria ? [val => !!val || 'Debe seleccionar una opción'] : []" />
+                                                        </div>
                                                     </div>
-
-                                                    <div class="col-12 col-sm-7 fila-pregunta tipo-radio">
-
-                                                        <q-option-group
-                                                            :value="pregunta.respuesta"
-                                                            @input="val => $set(pregunta, 'respuesta', val)"
-                                                            :options="pregunta.opciones" type="radio" inline
-                                                            :disable="esVisualizacion"
-                                                            :rules="pregunta.obligatoria ? [val => !!val || 'Debe seleccionar una opción'] : []"
-                                                            style="margin: 10px;" />
-
-                                                    </div>
-
                                                 </template>
                                                 <!-- PREGUNTA 2 -->
-                                                <template v-if="mostrarPregunta2(pregunta)"
-                                                    class="col-12 q-mt-sm">
+                                                <template v-if="mostrarPregunta2(pregunta)">
+                                                    <div class="ficha-campo ficha-pregunta2">
+                                                        <div class="ficha-label">
+                                                            {{ pregunta.pregunta2 }}
+                                                            <span v-if="pregunta.obligatoria2 === 1" class="ficha-obligatorio">*</span>
+                                                        </div>
+                                                        <div class="ficha-input" :class="{ 'modo-visualizacion': esVisualizacion }">
+                                                            <!-- TEXT -->
+                                                            <template v-if="esVisualizacion">
+                                                                <span class="ficha-valor">{{ pregunta.respuesta2 || '—' }}</span>
+                                                            </template>
+                                                            <template v-else>
+                                                                <q-input v-if="pregunta.tipoControl2 === 'text'" outlined dense
+                                                                    v-model="pregunta.respuesta2" :disable="esVisualizacion"
+                                                                    :type="pregunta.tipoDato2 === 'NUMBER' ? 'number' : 'text'"
+                                                                    :rules="validarPregunta2(pregunta)" />
 
-                                                    <div class="col-12 col-sm-5 text-body2 q-mb-xs fila-pregunta tipo-text">
-                                                        {{ pregunta.pregunta2 }}
+                                                                <q-select v-if="pregunta.tipoControl2 === 'select'" outlined
+                                                                    dense v-model="pregunta.respuesta2"
+                                                                    :options="pregunta.opciones2" emit-value map-options
+                                                                    :disable="esVisualizacion" />
+                                                            </template>
+                                                        </div>
                                                     </div>
-
-                                                    <div class="col-12 col-sm-7 fila-pregunta tipo-text">
-                                                        <!-- TEXT -->
-                                                        <q-input v-if="pregunta.tipoControl2 === 'text'" outlined dense
-                                                            v-model="pregunta.respuesta2" :disable="esVisualizacion"
-                                                            style="border: none;"
-                                                            :type="pregunta.tipoDato2 === 'NUMBER' ? 'number' : 'text'"
-                                                            :rules="validarPregunta2(pregunta)" />
-
-                                                        <!-- SELECT -->
-                                                        <q-select v-if="pregunta.tipoControl2 === 'select'" outlined
-                                                            dense v-model="pregunta.respuesta2"
-                                                            :options="pregunta.opciones2" emit-value map-options
-                                                            :disable="esVisualizacion" />
-                                                    </div>
-
                                                 </template>
 
 
@@ -491,12 +511,12 @@
                     </q-card-section>
 
                     <!-- FOOTER -->
-                    <q-card-actions align="center">
+                        <q-card-actions class="ficha-footer" align="center">
 
-                        <q-btn v-if="!esVisualizacion" label="Guardar" icon="save" type="submit" @click="guardarTodo" />
-                        <q-btn label="Cancelar" v-close-popup style="min-width: 70px;" />
-                    </q-card-actions>
-
+                            <q-btn v-if="!esVisualizacion" label="Guardar" icon="save" type="submit" @click="guardarTodo" class="ficha-btn-guardar" />
+                            <q-btn label="Cancelar" v-close-popup class="ficha-btn-cancelar" style="min-width: 70px;" />
+                        </q-card-actions>
+                    </div>
                 </q-card>
             </q-dialog>
             <q-dialog v-model="dialogCentros" persistent>
@@ -543,92 +563,218 @@
     </template>
 
 <style scoped>
-.seccion-cabecera {
-    background-color: #f0f4f8;
-    border-radius: 4px;
-    padding: 12px;
-    margin-bottom: 16px;
-    border-left: 4px solid #DEE8F5;
+.ficha-dialog {
+    width: 95%;
+    max-width: 900px;
 }
 
-.seccion-cabecera .col-6 {
+.ficha-scroll-wrapper {
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+    min-width: 640px;
+    overflow-x: auto;
+}
+
+.tabla-scroll-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tabla-scroll-container .q-markup-table {
+    min-width: 500px;
+}
+
+.ficha-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px 20px;
+}
+
+.ficha-titulo {
+    font-size: clamp(0.9rem, 2.5vw, 1.25rem);
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+    flex: 1;
+    min-width: 0;
     font-weight: 600;
-    color: #2c3e50;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    color: #1a1a1a;
+    padding-right: 8px;
 }
 
-.fila-pregunta {
-    padding: 12px 8px;
-    border-radius: 4px;
-    transition: background-color 0.2s ease;
-    border-left: 3px solid transparent;
+.ficha-cerrar {
+    flex-shrink: 0;
+    margin-top: 2px;
 }
 
-.fila-pregunta:nth-child(odd) {
-    background-color: #fafafa;
+.ficha-input .q-field,
+.ficha-input .q-field.q-field--outlined,
+.ficha-input .q-field.q-field--filled {
+    border: none !important;
+    box-shadow: none !important;
 }
 
-.fila-pregunta:nth-child(even) {
-    background-color: #ffffff;
+.ficha-pregunta {
+    padding: 16px 0;
+    border-bottom: 1px solid #e8e8e8;
+    transition: background-color 0.15s ease;
 }
 
-.fila-pregunta:hover {
+.ficha-pregunta:hover {
+    background-color: #fafbfc;
+}
+
+.ficha-pregunta:last-child {
+    border-bottom: none;
+}
+
+.ficha-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+@media (min-width: 600px) {
+    .ficha-campo {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: 16px;
+    }
+}
+
+.ficha-label {
+    flex: 0 0 auto;
+    min-width: 150px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #1a1a1a;
+    line-height: 1.5;
+    padding-top: 8px;
+}
+
+@media (min-width: 600px) {
+    .ficha-label {
+        flex: 0 0 40%;
+        max-width: 40%;
+    }
+}
+
+.ficha-input {
+    flex: 1;
+    min-width: 0;
+}
+
+.ficha-input .q-field__control {
+    border-radius: 6px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ficha-input .q-field__control:hover {
+    border-color: #bf0411;
+}
+
+.ficha-input .q-field--focused .q-field__control {
+    border-color: #bf0411;
+    box-shadow: 0 0 0 3px rgba(191, 4, 17, 0.12);
+}
+
+.ficha-input.modo-visualizacion .q-field__control {
+    background-color: #f9f9f9;
+    border-color: #e0e0e0;
+}
+
+.ficha-input.modo-visualizacion .q-field__control::before {
+    border-color: #e0e0e0;
+}
+
+.ficha-input.modo-visualizacion .q-field__control::after {
+    display: none;
+}
+
+.ficha-valor {
+    display: block;
+    padding: 10px 12px;
     background-color: #f5f5f5;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    color: #333;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    min-height: 40px;
 }
 
-.fila-pregunta.tipo-select {
-    border-left-color: #3498db;
+.ficha-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
-.fila-pregunta.tipo-text {
-    border-left-color: #27ae60;
+.ficha-tag {
+    display: inline-block;
+    padding: 6px 12px;
+    background-color: #e8f4fd;
+    color: #0277bd;
+    border-radius: 16px;
+    font-size: 0.85rem;
+    font-weight: 500;
 }
 
-.fila-pregunta.tipo-radio {
-    border-left-color: #e74c3c;
-}
-
-.fila-pregunta.tipo-selectM {
-    border-left-color: #9b59b6;
-}
-
-.fila-pregunta.tipo-label {
-    border-left-color: #f39c12;
+.ficha-pregunta2 {
+    margin-top: 8px;
+    padding-left: 16px;
+    border-left: 3px solid #BF0411;
 }
 
 .pregunta-label {
-    background-color: #fff3cd;
+    background-color: #e8f4fd;
     padding: 16px;
-    margin-top: 16px;
-    margin-bottom: 12px;
-    border-radius: 4px;
-    border-left: 4px solid #f39c12;
+    margin: 16px 0 12px 0;
+    border-radius: 6px;
+    border-left: 4px solid #0288d1;
 }
 
 .pregunta-label .text-body2 {
-    color: #856404;
+    color: #01579b;
     font-weight: 600;
+    font-size: 1rem;
+}
+
+.seccion-cabecera {
+    background-color: #f5f7fa;
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    border-left: 4px solid #BF0411;
+}
+
+.seccion-cabecera .col-12 {
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 .datos-generales-tabla tbody tr:nth-child(odd) {
-    background-color: #f8f9fa;
+    background-color: #fafbfc;
 }
 
 .datos-generales-tabla tbody tr:hover {
-    background-color: #e9ecef;
+    background-color: #f0f4f8;
 }
 
 .datos-generales-tabla td:first-child {
     background-color: #DEE8F5;
     font-weight: 600;
-    color: #2c3e50;
-    min-width: 180px;
+    color: #1a1a1a;
+    min-width: 200px;
 }
 
 .datos-generales-tabla .q-icon {
-    color: #DEE8F5;
+    color: #BF0411;
     margin-right: 8px;
 }
 
@@ -637,8 +783,8 @@
 }
 
 .seccion-expansion {
-    margin-bottom: 12px;
-    border-radius: 6px;
+    margin-bottom: 20px;
+    border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
@@ -655,42 +801,46 @@
     background: linear-gradient(135deg, #a3030f 0%, #c0392b 100%);
 }
 
+.q-expansion-item__content {
+    padding: 20px;
+}
+
 .totales-container {
-    background-color: #f8f9fa;
+    background-color: #fafbfc;
     border-radius: 8px;
-    padding: 16px;
-    margin-top: 20px;
-    border: 1px solid #dee2e6;
+    padding: 20px;
+    margin-top: 24px;
+    border: 1px solid #e0e0e0;
 }
 
 .totales-header {
     background: linear-gradient(135deg, #DEE8F5 0%, #c8d6e5 100%);
-    padding: 12px 16px;
+    padding: 14px 20px;
     border-radius: 6px 6px 0 0;
-    margin: -16px -16px 16px -16px;
+    margin: -20px -20px 20px -20px;
     border-bottom: 2px solid #BF0411;
 }
 
 .totales-header .text-weight-bold {
-    color: #2c3e50;
+    color: #1a1a1a;
     font-size: 1rem;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.05em;
 }
 
 .totales-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 12px;
-    margin-bottom: 8px;
-    border-radius: 4px;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .totales-row:hover {
     transform: translateX(4px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .totales-row.conforme {
@@ -709,35 +859,215 @@
 }
 
 .totales-row.no-aplica {
-    background-color: #e2e3e5;
+    background-color: #e9ecef;
     border-left: 4px solid #6c757d;
 }
 
 .totales-row .text-right {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     font-weight: 700;
+    color: #1a1a1a;
+}
+
+.q-field--disabled {
+    opacity: 0.7;
+}
+
+.q-field--disabled .q-field__control {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
+
+.q-radio__inner--truthy {
+    color: #BF0411;
+}
+
+.q-option-group .q-radio {
+    margin-right: 16px;
+}
+
+.q-option-group .q-radio:hover .q-radio__inner {
+    color: #d63031;
 }
 
 @media (max-width: 599px) {
-    .seccion-cabecera .col-6 {
-        font-size: 0.75rem;
+    .ficha-label {
+        font-size: 0.9rem;
+        padding-top: 0;
+        margin-bottom: 4px;
     }
     
-    .fila-pregunta {
-        padding: 8px 4px;
+    .ficha-pregunta {
+        padding: 12px 0;
     }
     
-    .fila-pregunta > div:first-child {
-        margin-bottom: 8px;
+    .ficha-valor {
+        font-size: 0.9rem;
+        padding: 8px 10px;
+    }
+    
+    .ficha-input .q-field {
+        min-height: 48px;
+    }
+    
+    .ficha-input .q-field__control {
+        min-height: 40px;
+    }
+    
+    .ficha-dialog {
+        width: 100%;
+        max-width: 100%;
+        margin: 8px;
+    }
+    
+    .seccion-expansion .q-expansion-item__content {
+        padding: 12px;
+    }
+    
+    .totales-row {
+        padding: 10px 12px;
+    }
+    
+    .totales-row .text-right {
+        font-size: 1rem;
     }
 }
 
 .q-markup-table {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
 }
 
 .q-markup-table td {
-    padding: 10px 12px;
+    padding: 12px 16px;
+    vertical-align: top;
+}
+
+.q-input, .q-select {
+    min-height: 42px;
+}
+
+.q-input .q-field__control, .q-select .q-field__control {
+    min-height: 40px;
+    height: 40px;
+}
+
+.q-input input, .q-select .q-field__input {
+    padding: 8px 0;
+}
+
+/* Datos Generales - quitar bordes dobles */
+.datos-generales-tabla .q-field,
+.datos-generales-tabla .q-field.q-field--outlined,
+.datos-generales-tabla .q-field.q-field--filled {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.datos-generales-tabla .q-field__control {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Focus visible para accesibilidad */
+.ficha-input .q-field--focused .q-field__control {
+    outline: 2px solid #BF0411;
+    outline-offset: 2px;
+}
+
+.ficha-input .q-radio--focused .q-radio__inner {
+    outline: 2px solid #BF0411;
+    outline-offset: 2px;
+}
+
+/* Hover en radios */
+.q-radio:hover .q-radio__inner:not(.q-radio__inner--truthy) {
+    color: #d63031;
+}
+
+.q-radio__inner--truthy {
+    color: #BF0411 !important;
+}
+
+/* Separación entre secciones */
+.seccion-expansion {
+    margin-bottom: 24px;
+}
+
+/* Barra para botón PDF */
+.ficha-pdf-bar {
+    background-color: #f0f4f8;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Audio player estilizado */
+audio {
+    width: 100%;
+    border-radius: 6px;
+    margin-top: 8px;
+    height: 40px;
+}
+
+/* Footer del diálogo */
+.ficha-footer {
+    border-top: 1px solid #e0e0e0;
+    padding: 16px 24px;
+    background-color: #fafbfc;
+}
+
+.ficha-btn-guardar {
+    min-width: 120px;
+}
+
+.ficha-btn-cancelar {
+    min-width: 100px;
+}
+
+.ficha-obligatorio {
+    color: #BF0411;
+    margin-left: 4px;
+    font-weight: 700;
+}
+
+/* Scrollbar estilizado - vertical (body) */
+.ficha-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.ficha-body::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.ficha-body::-webkit-scrollbar-thumb {
+    background: #c0c0c0;
+    border-radius: 4px;
+}
+
+.ficha-body::-webkit-scrollbar-thumb:hover {
+    background: #a0a0a0;
+}
+
+/* Scrollbar estilizado - horizontal (wrapper) */
+.ficha-scroll-wrapper::-webkit-scrollbar {
+    height: 8px;
+}
+
+.ficha-scroll-wrapper::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.ficha-scroll-wrapper::-webkit-scrollbar-thumb {
+    background: #c0c0c0;
+    border-radius: 4px;
+}
+
+.ficha-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #a0a0a0;
 }
 </style>
 
