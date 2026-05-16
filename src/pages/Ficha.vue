@@ -1880,6 +1880,7 @@ export default {
 
                             obligatoria,
                             respuesta: 2,
+                            condicion: this.parseCondicion(p.condicion),
                             opciones: [
                                 { label: 'SI', value: 1 },
                                 { label: 'NO', value: 0 }
@@ -2431,6 +2432,7 @@ export default {
                         switch (p.tipoControl) {
                             case 'text':    p.respuesta = ''; break
                             case 'selectM': p.respuesta = []; break
+                            case 'label':   p.respuesta = 2; break
                             default:        p.respuesta = null; break
                         }
                     }
@@ -2500,6 +2502,7 @@ export default {
                     switch (pregunta.tipoControl) {
                         case 'text':    this.$set(pregunta, 'respuesta', ''); break
                         case 'selectM': this.$set(pregunta, 'respuesta', []); break
+                        case 'label':   this.$set(pregunta, 'respuesta', 2); break
                         default:        this.$set(pregunta, 'respuesta', null); break
                     }
                 }
@@ -2511,6 +2514,7 @@ export default {
                     switch (pregunta.tipoControl) {
                         case 'text':    this.$set(pregunta, 'respuesta', ''); break
                         case 'selectM': this.$set(pregunta, 'respuesta', []); break
+                        case 'label':   this.$set(pregunta, 'respuesta', 2); break
                         default:        this.$set(pregunta, 'respuesta', null); break
                     }
                 }
@@ -2526,6 +2530,7 @@ export default {
                     switch (pregunta.tipoControl) {
                         case 'text':    this.$set(pregunta, 'respuesta', ''); break
                         case 'selectM': this.$set(pregunta, 'respuesta', []); break
+                        case 'label':   this.$set(pregunta, 'respuesta', 2); break
                         default:        this.$set(pregunta, 'respuesta', null); break
                     }
                 }
@@ -2538,6 +2543,7 @@ export default {
                 switch (pregunta.tipoControl) {
                     case 'text':    this.$set(pregunta, 'respuesta', ''); break
                     case 'selectM': this.$set(pregunta, 'respuesta', []); break
+                    case 'label':   this.$set(pregunta, 'respuesta', 2); break
                     default:        this.$set(pregunta, 'respuesta', null); break
                 }
             }
