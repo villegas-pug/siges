@@ -79,12 +79,12 @@
             <div class="q-pa-md">
                 <div class="col-12">
 
-                    <q-table :data="dataTableAnexos" :columns="columnasTableAnexos" row-key="idAnexoCabecera"
+                    <q-table class="tabla-anexos" :data="dataTableAnexos" :columns="columnasTableAnexos" row-key="idAnexoCabecera"
                         table-header-class="bg-inabif text-bold" :rows-per-page-options="[10, 20, 50]"
                         :filter="filtroTabla" :loading="loadingTabla" dense flat bordered>
                         <!-- SLOT PARA ESTADO -->
                         <template v-slot:body-cell-estado="props">
-                            <q-td align="center">
+                            <q-td :props="props">
                                 <q-chip
                                     :color="estadosMap[props.row.estado]?.color || 'grey'"
                                     :text-color="estadosMap[props.row.estado]?.textColor || 'white'"
@@ -95,6 +95,40 @@
                                 </q-chip>
                             </q-td>
                         </template>
+
+                        <!-- SLOTS PARA TEXTO LARGO CON TOOLTIP -->
+                        <template v-slot:body-cell-nombreUnidad="props">
+                            <q-td :props="props">
+                                <div class="ellipsis" :title="props.row.nombreUnidad">
+                                    {{ props.row.nombreUnidad }}
+                                </div>
+                            </q-td>
+                        </template>
+
+                        <template v-slot:body-cell-nombreServicio="props">
+                            <q-td :props="props">
+                                <div class="ellipsis" :title="props.row.nombreServicio">
+                                    {{ props.row.nombreServicio }}
+                                </div>
+                            </q-td>
+                        </template>
+
+                        <template v-slot:body-cell-nombreCentro="props">
+                            <q-td :props="props">
+                                <div class="ellipsis" :title="props.row.nombreCentro">
+                                    {{ props.row.nombreCentro }}
+                                </div>
+                            </q-td>
+                        </template>
+
+                        <template v-slot:body-cell-nombreAnexo="props">
+                            <q-td :props="props">
+                                <div class="ellipsis" :title="props.row.nombreAnexo">
+                                    {{ props.row.nombreAnexo }}
+                                </div>
+                            </q-td>
+                        </template>
+
                         <!-- SLOT PARA BUSCADOR -->
                         <template v-slot:top-right>
                             <q-input dense outlined debounce="300" v-model="filtroTabla" placeholder="Buscar...">
@@ -105,7 +139,7 @@
                         </template>
 
                         <template v-slot:body-cell-acciones="scope">
-                            <q-td align="center">
+                            <q-td :props="scope">
                                 <q-btn-dropdown dropdown-icon="settings" class="q-mr-xs acciones" dense>
                                     <q-list style="min-width: 200px">
                                         <!-- Editar Evaluación -->
@@ -587,7 +621,7 @@
                             </template>
 
                             <template v-slot:body-cell-accion="props">
-                                <q-td align="center">
+                                <q-td :props="props">
                                     <q-btn label="Seleccionar" class="btn-inabif" size="sm"
                                         @click="seleccionarCentro(props.row)" />
                                 </q-td>
@@ -1119,6 +1153,32 @@ audio {
     margin-right: 8px;
     vertical-align: middle;
 }
+
+/* Layout fijo solo para tabla de anexos */
+.tabla-anexos .q-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.tabla-anexos .q-table th,
+.tabla-anexos .q-table td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Truncado con ellipsis para celdas de texto */
+.ellipsis-cell {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Ellipsis dentro de slots personalizados */
+.q-td .ellipsis {
+    width: 100%;
+    display: block;
+}
 </style>
 
 <script>
@@ -1236,75 +1296,90 @@ export default {
             dataTableAnexos: [],
 
             columnasTableAnexos: [
-
                 {
                     name: "idAnexoCabecera",
                     label: "ID",
                     field: "idAnexoCabecera",
                     align: "center",
-                    sortable: true
+                    sortable: true,
+                    sort: (a, b) => parseInt(a, 10) - parseInt(b, 10),
+                    style: "width: 70px; min-width: 70px; max-width: 70px;",
+                    classes: "ellipsis-cell"
                 },
-
-
                 {
                     name: "nombreUnidad",
                     label: "UNIDAD",
                     field: "nombreUnidad",
                     align: "center",
-                    sortable: true
+                    sortable: true,
+                    style: "width: 130px; min-width: 130px; max-width: 130px;",
+                    classes: "ellipsis-cell"
                 },
-
                 {
                     name: "nombreServicio",
                     label: "SERVICIO",
                     field: "nombreServicio",
                     align: "left",
-                    sortable: true
+                    sortable: true,
+                    style: "width: 180px; min-width: 180px; max-width: 180px;",
+                    classes: "ellipsis-cell"
                 },
-
                 {
                     name: "nombreCentro",
                     label: "CENTRO",
                     field: "nombreCentro",
                     align: "center",
-                    sortable: true
+                    sortable: true,
+                    style: "width: 130px; min-width: 130px; max-width: 130px;",
+                    classes: "ellipsis-cell"
                 },
                 {
                     name: "codigoAnexo2",
                     label: "CÓDIGO",
                     field: "codigoAnexo2",
                     align: "center",
-                    sortable: true
+                    sortable: true,
+                    style: "width: 100px; min-width: 100px; max-width: 100px;",
+                    classes: "ellipsis-cell"
                 },
                 {
                     name: "nombreAnexo",
                     label: "INSTRUMENTO",
                     field: "nombreAnexo",
                     align: "left",
-                    sortable: true
+                    sortable: true,
+                    style: "width: 300px; min-width: 300px; max-width: 300px;",
+                    classes: "ellipsis-cell"
                 },
                 {
                     name: "correlativo",
                     label: "CORRELATIVO",
                     field: "correlativo",
                     align: "center",
-                    sortable: true
+                    sortable: true,
+                    sort: (a, b) => parseInt(a, 10) - parseInt(b, 10),
+                    style: "width: 100px; min-width: 100px; max-width: 100px;",
+                    classes: "ellipsis-cell"
                 },
                 {
                     name: "estado",
                     label: "ESTADO",
                     field: "estado",
                     align: "center",
-                    sortable: true
+                    sortable: true,
+                    sort: (a, b) => {
+                        const map = { 1: 'REGISTRADO', 0: 'ANULADO' };
+                        return (map[a] || '').localeCompare(map[b] || '');
+                    },
+                    style: "width: 130px; min-width: 130px; max-width: 130px;"
                 },
-
                 {
                     name: "acciones",
                     label: "ACCIONES",
                     field: "acciones",
-                    align: "center"
+                    align: "center",
+                    style: "width: 80px; min-width: 80px; max-width: 80px;"
                 }
-
             ],
             dialogCentros: false,
             loadingCentros: false,
