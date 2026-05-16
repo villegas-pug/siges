@@ -367,6 +367,12 @@
                                                                 :options="pregunta.opciones" emit-value map-options
                                                                 :disable="esVisualizacion"
                                                                 :rules="pregunta.obligatoria ? [val => !!val || 'Debe seleccionar una opción'] : []">
+                                                                <template v-slot:selected-item="scope">
+                                                                    <div class="row items-center no-wrap">
+                                                                        <img v-if="getOptionImage(scope.opt.label)" :src="getOptionImage(scope.opt.label)" class="select-option-img q-mr-sm" />
+                                                                        <span>{{ scope.opt.label }}</span>
+                                                                    </div>
+                                                                </template>
                                                                 <template v-slot:option="scope">
                                                                     <q-item v-bind="scope.itemProps" v-on="scope.itemEvents">
                                                                         <q-item-section avatar v-if="getOptionImage(scope.opt.label)">
@@ -395,11 +401,28 @@
                                                                     <span v-for="item in pregunta.respuesta" :key="item" class="ficha-tag">{{ item }}</span>
                                                                 </div>
                                                             </template>
-                                                            <q-select v-else outlined dense multiple
+                                                            <q-select v-else outlined dense multiple use-chips
                                                                 :value="pregunta.respuesta"
                                                                 @input="val => $set(pregunta, 'respuesta', val)"
                                                                 :options="pregunta.opciones" emit-value map-options
-                                                                :disable="esVisualizacion" />
+                                                                :disable="esVisualizacion">
+                                                                <template v-slot:selected-item="scope">
+                                                                    <q-chip removable @remove="scope.removeAtIndex(scope.index)" :tabindex="scope.tabindex" class="q-ma-none">
+                                                                        <img v-if="getOptionImage(scope.opt.label)" :src="getOptionImage(scope.opt.label)" class="select-option-img q-mr-xs" />
+                                                                        {{ scope.opt.label }}
+                                                                    </q-chip>
+                                                                </template>
+                                                                <template v-slot:option="scope">
+                                                                    <q-item v-bind="scope.itemProps" v-on="scope.itemEvents">
+                                                                        <q-item-section avatar v-if="getOptionImage(scope.opt.label)">
+                                                                            <img :src="getOptionImage(scope.opt.label)" class="select-option-img" />
+                                                                        </q-item-section>
+                                                                        <q-item-section>
+                                                                            <q-item-label>{{ scope.opt.label }}</q-item-label>
+                                                                        </q-item-section>
+                                                                    </q-item>
+                                                                </template>
+                                                            </q-select>
                                                         </div>
                                                     </div>
                                                 </template>
@@ -1883,6 +1906,24 @@ export default {
                             break
                     }
 
+                    // Inicializar respuesta2 según tipoControl2
+                    let respuesta2 = null
+                    switch (p.tipoControl2) {
+                        case 'text':
+                            respuesta2 = ''
+                            break
+                        case 'select':
+                        case 'radio':
+                            respuesta2 = null
+                            break
+                        case 'selectM':
+                            respuesta2 = []
+                            break
+                        default:
+                            respuesta2 = null
+                            break
+                    }
+
                     seccionActual.preguntas.push({
                         ...p,
 
@@ -1893,7 +1934,7 @@ export default {
                         obligatoria2: Number(p.obligatoria2 ?? 0),
 
                         respuesta,
-                        respuesta2: null,
+                        respuesta2,
 
                         opciones,
                         opciones2: this.parseOpciones(p.opciones2),
@@ -2038,24 +2079,6 @@ export default {
 
                         }))
                 );
-
-                // DEBUG: Confirmar valores finales del payload antes de enviar
-                console.log('=== PAYLOAD RESPUESTAS ===', respuestas);
-
-                /*
-                                const respuestas = this.secciones.flatMap(seccion =>
-                                    seccion.preguntas.filter(p => this.mostrarPregunta(p)).map(p => ({
-                                        idPregunta: p.idPregunta,
-                                        respuesta: ['cabecera', 'label'].includes(p.tipoControl)
-                                            ? (p.tipoControl === 'cabecera' ? 1 : 2)
-                                            : (Array.isArray(p.respuesta) ? p.respuesta.join('|') : p.respuesta ?? null),
-                                        respuesta2: this.mostrarPregunta2(p)
-                                            ? p.respuesta2 ?? null
-                                            : null,
-                                        observacion: null,
-                                        puntaje: null
-                                    }))
-                                );*/
 
                 const payload = {
                     idAnexo: this.form.idAnexo,
