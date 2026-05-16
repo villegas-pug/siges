@@ -169,8 +169,9 @@
                                 <!-- I. DATOS GENERALES (ACORDEÓN) -->
                                 <!-- ============================= -->
 
-                                <q-expansion-item 
-                                    label="I. DATOS GENERALES DEL SERVICIO" 
+                                <q-expansion-item
+                                    group="ficha-secciones"
+                                    label="I. DATOS GENERALES DEL SERVICIO"
                                     expand-separator header-class="bg-red-5 text-white q-mt-sm header-seccion"
                                     expand-icon-class="text-white">
 
@@ -320,7 +321,10 @@
 
                                 <div v-else>
 
-                                    <q-expansion-item v-for="(seccion, index) in secciones" :key="index"
+                                    <q-expansion-item
+                                        v-for="(seccion, index) in secciones"
+                                        :key="index"
+                                        group="ficha-secciones"
                                         :label="seccion.titulo" expand-separator
                                         header-class="bg-red-5 text-white q-mt-sm header-seccion seccion-expansion" expand-icon-class="text-white">
                                         <div class="q-pa-md">
@@ -1372,6 +1376,9 @@ export default {
                 // Marcar modo edición
                 this.modoEdicion = true;
 
+                // Cerrar acordeón
+                this.seccionAbierta = null;
+
                 // Abrir diálogo
                 this.dialog = true;
 
@@ -1407,6 +1414,9 @@ export default {
                 this.form.tipoCentro = row.tipoCentro;
                 this.modoEdicion = false;
                 this.modoVisualizacion = true;
+
+                // Cerrar acordeón
+                this.seccionAbierta = null;
 
                 this.dialog = true;
 
@@ -1609,6 +1619,7 @@ export default {
         ======================================== */
         abrirDialog() {
             this.modo = "nuevo";
+            this.seccionAbierta = null;
             const faltantes = []
 
             if (!this.unidadSeleccionada) {
@@ -2230,6 +2241,7 @@ export default {
 
         resetModo() {
             this.modo = null;
+            this.seccionAbierta = null;
         },
 
         async descargarPDF() {
