@@ -85,11 +85,14 @@
                         <!-- SLOT PARA ESTADO -->
                         <template v-slot:body-cell-estado="props">
                             <q-td align="center">
-
-                                <q-btn :label="props.row.estado === 1 ? 'REGISTRADO' : 'ANULADO'"
-                                    :color="props.row.estado === 1 ? 'positive' : 'negative'" outline dense size="sm"
-                                    no-caps disable />
-
+                                <q-chip
+                                    :color="estadosMap[props.row.estado]?.color || 'grey'"
+                                    :text-color="estadosMap[props.row.estado]?.textColor || 'white'"
+                                    :icon="estadosMap[props.row.estado]?.icon || 'help'"
+                                    size="sm"
+                                >
+                                    {{ estadosMap[props.row.estado]?.label || 'DESCONOCIDO' }}
+                                </q-chip>
                             </q-td>
                         </template>
                         <!-- SLOT PARA BUSCADOR -->
@@ -1110,8 +1113,8 @@ audio {
 }
 
 .select-option-img {
-    width: 32px;
-    height: 32px;
+    width: 26px;
+    height: 26px;
     object-fit: contain;
     margin-right: 8px;
     vertical-align: middle;
@@ -1174,6 +1177,10 @@ export default {
                 { id: 'PROGRAMADA', nombreTipo: 'PROGRAMADA' },
                 { id: 'INOPINADA', nombreTipo: 'INOPINADA' },
             ],
+            estadosMap: {
+                1: { label: 'REGISTRADO', color: 'positive', textColor: 'white', icon: 'check_circle' },
+                0: { label: 'ANULADO',    color: 'negative', textColor: 'white', icon: 'cancel' }
+            },
             esSumable: true,
             form: {
 
