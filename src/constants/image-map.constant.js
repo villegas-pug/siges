@@ -1,6 +1,6 @@
 import { normalizeTextSpacing } from 'src/utils'
 
-const PUBLIC_IMAGE_PATH = 'public/imgs'
+const PUBLIC_IMAGE_PATH = '/imgs'
 
 export const IMAGE_MAP = {
   [normalizeTextSpacing('Conforme')]: `${PUBLIC_IMAGE_PATH}/escar-01/ES_CAR01_1_1.png`,

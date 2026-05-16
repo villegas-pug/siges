@@ -366,7 +366,18 @@
                                                                 @input="val => $set(pregunta, 'respuesta', val)"
                                                                 :options="pregunta.opciones" emit-value map-options
                                                                 :disable="esVisualizacion"
-                                                                :rules="pregunta.obligatoria ? [val => !!val || 'Debe seleccionar una opción'] : []" />
+                                                                :rules="pregunta.obligatoria ? [val => !!val || 'Debe seleccionar una opción'] : []">
+                                                                <template v-slot:option="scope">
+                                                                    <q-item v-bind="scope.itemProps" v-on="scope.itemEvents">
+                                                                        <q-item-section avatar v-if="getOptionImage(scope.opt.label)">
+                                                                            <img :src="getOptionImage(scope.opt.label)" class="select-option-img" />
+                                                                        </q-item-section>
+                                                                        <q-item-section>
+                                                                            <q-item-label>{{ scope.opt.label }}</q-item-label>
+                                                                        </q-item-section>
+                                                                    </q-item>
+                                                                </template>
+                                                            </q-select>
                                                         </div>
                                                     </div>
                                                 </template>
@@ -1070,12 +1081,22 @@ audio {
 .ficha-scroll-wrapper::-webkit-scrollbar-thumb:hover {
     background: #a0a0a0;
 }
+
+.select-option-img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    margin-right: 8px;
+    vertical-align: middle;
+}
 </style>
 
 <script>
 
 
 import axios from "axios";
+import { IMAGE_MAP } from "src/constants/image-map.constant";
+import { normalizeTextSpacing } from "src/utils/normalize-text-spacing.util";
 
 export default {
 
@@ -1298,6 +1319,12 @@ export default {
         }
     },
     methods: {
+
+        getOptionImage(label) {
+            if (!label) return null;
+            const key = normalizeTextSpacing(label);
+            return IMAGE_MAP[key] || null;
+        },
 
         async editarRegistro(row) {
             this.modo = "editar";
