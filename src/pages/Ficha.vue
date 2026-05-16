@@ -169,7 +169,8 @@
                                 <!-- I. DATOS GENERALES (ACORDEÓN) -->
                                 <!-- ============================= -->
 
-                                <q-expansion-item label="I. DATOS GENERALES DEL SERVICIO" default-opened
+                                <q-expansion-item 
+                                    label="I. DATOS GENERALES DEL SERVICIO" 
                                     expand-separator header-class="bg-red-5 text-white q-mt-sm header-seccion"
                                     expand-icon-class="text-white">
 
