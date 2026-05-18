@@ -1711,26 +1711,34 @@ export default {
         abrirDialog() {
             this.modo = "nuevo";
             this.seccionAbierta = null;
-            const faltantes = []
-
             if (!this.unidadSeleccionada) {
-                faltantes.push('Unidad')
+                this.$q.notify({
+                    type: 'warning',
+                    message: 'Debe seleccionar: UNIDAD'
+                })
+                return
             }
 
             if (!this.servicioSeleccionado) {
-                faltantes.push('Servicio')
+                this.$q.notify({
+                    type: 'warning',
+                    message: 'Debe seleccionar: SERVICIO'
+                })
+                return
+            }
+
+            if (!this.centroSeleccionado) {
+                this.$q.notify({
+                    type: 'warning',
+                    message: 'Debe seleccionar: ESPACIO DE INTERVENCIÓN'
+                })
+                return
             }
 
             if (!this.anexoSeleccionado) {
-                faltantes.push('Anexo')
-            }
-
-            if (faltantes.length > 0) {
-
                 this.$q.notify({
                     type: 'warning',
-                    html: true,
-                    message: `Debe seleccionar: <b>${faltantes.join(', ').toUpperCase()}</b>`
+                    message: 'Debe seleccionar: INSTRUMENTO'
                 })
                 return
             }
