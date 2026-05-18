@@ -410,14 +410,14 @@
                                                                 :rules="pregunta.obligatoria ? [val => !!val || 'Debe seleccionar una opción'] : []">
                                                                 <template v-slot:selected-item="scope">
                                                                     <div class="row items-center no-wrap">
-                                                                        <img v-if="getOptionImage(scope.opt.label)" :src="getOptionImage(scope.opt.label)" class="select-option-img q-mr-sm" />
+                                                                        <img v-if="getOptionImage(pregunta, scope.opt)" :src="getOptionImage(pregunta, scope.opt)" class="select-option-img q-mr-sm" />
                                                                         <span>{{ scope.opt.label }}</span>
                                                                     </div>
                                                                 </template>
                                                                 <template v-slot:option="scope">
                                                                     <q-item v-bind="scope.itemProps" v-on="scope.itemEvents">
-                                                                        <q-item-section avatar v-if="getOptionImage(scope.opt.label)">
-                                                                            <img :src="getOptionImage(scope.opt.label)" class="select-option-img" />
+                                                                        <q-item-section avatar v-if="getOptionImage(pregunta, scope.index + 1)">
+                                                                            <img :src="getOptionImage(pregunta, scope.index + 1)" class="select-option-img" />
                                                                         </q-item-section>
                                                                         <q-item-section>
                                                                             <q-item-label>{{ scope.opt.label }}</q-item-label>
@@ -449,14 +449,14 @@
                                                                 :disable="esVisualizacion">
                                                                 <template v-slot:selected-item="scope">
                                                                     <q-chip removable @remove="scope.removeAtIndex(scope.index)" :tabindex="scope.tabindex" class="q-ma-none">
-                                                                        <img v-if="getOptionImage(scope.opt.label)" :src="getOptionImage(scope.opt.label)" class="select-option-img q-mr-xs" />
+                                                                        <img v-if="getOptionImage(pregunta, scope.opt)" :src="getOptionImage(pregunta, scope.opt)" class="select-option-img q-mr-xs" />
                                                                         {{ scope.opt.label }}
                                                                     </q-chip>
                                                                 </template>
                                                                 <template v-slot:option="scope">
                                                                     <q-item v-bind="scope.itemProps" v-on="scope.itemEvents">
-                                                                        <q-item-section avatar v-if="getOptionImage(scope.opt.label)">
-                                                                            <img :src="getOptionImage(scope.opt.label)" class="select-option-img" />
+                                                                        <q-item-section avatar v-if="getOptionImage(pregunta, scope.index + 1)">
+                                                                            <img :src="getOptionImage(pregunta, scope.index + 1)" class="select-option-img" />
                                                                         </q-item-section>
                                                                         <q-item-section>
                                                                             <q-item-label>{{ scope.opt.label }}</q-item-label>
@@ -1429,9 +1429,18 @@ export default {
     },
     methods: {
 
-        getOptionImage(label) {
-            if (!label) return null;
-            const key = normalizeTextSpacing(label);
+        getOptionImage(pregunta, optOrIndex) {
+            if (!pregunta || !pregunta.idPregunta || !pregunta.opciones) return null;
+            let indexItem;
+            if (typeof optOrIndex === 'number') {
+                indexItem = optOrIndex;
+            } else if (optOrIndex && optOrIndex.value !== undefined) {
+                indexItem = pregunta.opciones.findIndex(o => o.value === optOrIndex.value) + 1;
+            } else {
+                return null;
+            }
+            if (indexItem <= 0) return null;
+            const key = `${pregunta.idPregunta}-${indexItem}`;
             return IMAGE_MAP[key] || null;
         },
 
