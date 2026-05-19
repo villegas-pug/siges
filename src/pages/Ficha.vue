@@ -171,6 +171,13 @@
                                             </q-item-section>
                                             <q-item-section>Agregar Audio</q-item-section>
                                         </q-item>
+                                        <!-- Validar Ficha -->
+                                        <q-item clickable v-close-popup @click="abrirDialogValidarFicha(scope.row)">
+                                            <q-item-section avatar>
+                                                <q-avatar icon="verified" color="red" text-color="white" />
+                                            </q-item-section>
+                                            <q-item-section>Validar Ficha</q-item-section>
+                                        </q-item>
                                     </q-list>
                                 </q-btn-dropdown>
                             </q-td>
@@ -672,6 +679,85 @@
                     <q-card-actions align="right" class="q-pa-md">
                         <q-btn label="Cancelar" v-close-popup flat />
                         <q-btn label="Confirmar" color="primary" @click="confirmarSupervisados" />
+                    </q-card-actions>
+                </q-card>
+            </q-dialog>
+
+            <!-- DIALOGO VALIDAR FICHA -->
+            <q-dialog v-model="dialogValidarFicha" persistent @hide="resetValidacion">
+                <q-card style="width: 700px; max-width: 90vw">
+                    <q-card-section class="bg-header-dialog">
+                        <span style="float: right;">
+                            <q-btn icon="close" v-close-popup flat round size="sm"></q-btn>
+                        </span>
+                        <div class="text-body2 text-bold">VALIDAR FICHA</div>
+                        <div class="text-caption" v-if="fichaAValidar">
+                            {{ fichaAValidar.codigoAnexo2 }} - Correlativo: {{ fichaAValidar.correlativo }}
+                        </div>
+                    </q-card-section>
+
+                    <q-card-section>
+                        <div v-if="loadingCargarPersonal" class="text-center q-pa-lg">
+                            <q-spinner size="40px" color="primary" />
+                            <div class="q-mt-sm text-grey">Cargando personal...</div>
+                        </div>
+                        <q-table 
+                            v-else
+                            :data="personalValidacion" 
+                            :columns="columnasValidacion"
+                            row-key="idPersonal" 
+                            table-header-class="bg-inabif text-bold" 
+                            dense flat bordered
+                            :rows-per-page-options="[0]"
+                            hide-bottom>
+                            
+                            <template v-slot:body-cell-nro="props">
+                                <q-td :props="props">
+                                    {{ props.rowIndex + 1 }}
+                                </q-td>
+                            </template>
+
+                            <template v-slot:body-cell-validar="props">
+                                <q-td :props="props">
+                                    <q-chip v-if="props.row.validado" color="positive" text-color="white" icon="check" size="sm">
+                                        Validado
+                                    </q-chip>
+                                    <div v-else class="row q-gutter-sm items-center justify-center">
+                                        <q-input 
+                                            v-model="props.row.contrasena" 
+                                            type="password" 
+                                            outlined dense 
+                                            placeholder="Contraseña"
+                                            style="width: 140px"
+                                            :disable="props.row.validando"
+                                            @keyup.enter="validarPersonal(props.row)" />
+                                        <q-btn 
+                                            label="Validar" 
+                                            color="primary" 
+                                            size="sm" 
+                                            :loading="props.row.validando"
+                                            :disable="!props.row.contrasena"
+                                            @click="validarPersonal(props.row)" />
+                                    </div>
+                                </q-td>
+                            </template>
+
+                            <template v-slot:no-data>
+                                <div class="full-width row flex-center q-pa-md text-grey">
+                                    No se encontró personal para validar
+                                </div>
+                            </template>
+                        </q-table>
+                    </q-card-section>
+
+                    <q-card-actions align="right" class="q-pa-md">
+                        <q-btn label="Cerrar" v-close-popup flat />
+                        <q-btn 
+                            label="Dar Conformidad" 
+                            class="btn-inabif" 
+                            :loading="validandoConformidad"
+                            :disable="!todosValidados"
+                            @click="darConformidad" />
                     </q-card-actions>
                 </q-card>
             </q-dialog>
@@ -1487,7 +1573,35 @@ export default {
             ],
             filtroCentros: "",
 
-
+            dialogValidarFicha: false,
+            fichaAValidar: null,
+            personalValidacion: [],
+            columnasValidacion: [
+                {
+                    name: "nro",
+                    label: "N°",
+                    field: "nro",
+                    align: "center",
+                    sortable: false,
+                    style: "width: 50px;"
+                },
+                {
+                    name: "nombre",
+                    label: "PERSONAL (NOMBRES)",
+                    field: "nombre",
+                    align: "left",
+                    sortable: true
+                },
+                {
+                    name: "validar",
+                    label: "VALIDAR",
+                    field: "validar",
+                    align: "center",
+                    style: "width: 280px;"
+                }
+            ],
+            validandoConformidad: false,
+            loadingCargarPersonal: false
 
         }
     },
@@ -2819,6 +2933,161 @@ export default {
 
                 return null
             }
+        },
+
+        async abrirDialogValidarFicha(row) {
+            this.fichaAValidar = row;
+            this.personalValidacion = [];
+            this.loadingCargarPersonal = true;
+
+            let idRespSupervision = row.idRespSupervision;
+            let respSupervision = row.respSupervision;
+            let idSupervisado = row.idSupervisado;
+
+            // Si la tabla principal no trae los IDs de personal, los obtenemos del detalle
+            if (!idRespSupervision || !respSupervision || !idSupervisado) {
+                try {
+                    const res = await this.$axios.get(
+                        `${process.env.API_URL_SIGESU}/obtenerRespuestas`,
+                        {
+                            params: {
+                                idAnexoCabecera: row.idAnexoCabecera,
+                                correlativo: row.correlativo
+                            }
+                        }
+                    );
+                    const data = res.data?.data;
+                    if (data) {
+                        if (!idRespSupervision) idRespSupervision = data.idRespSupervision;
+                        if (!respSupervision) respSupervision = data.respSupervision;
+                        if (!idSupervisado) idSupervisado = data.idSupervisado;
+                    }
+                } catch (error) {
+                    console.error(error);
+                    this.$q.notify({ type: "negative", message: "Error al obtener datos de la ficha" });
+                    this.loadingCargarPersonal = false;
+                    return;
+                }
+            }
+
+            let trabajadores = [];
+            try {
+                const res = await this.$axios.get(
+                    process.env.API_URL_SIGESU + "/responsables-centro",
+                    { params: { nombreCentro: row.nombreCentro } }
+                );
+                const data = res.data?.data || res.data || [];
+                trabajadores = Array.isArray(data) ? data.map(t => ({
+                    ...t,
+                    idPersonal: String(t.idPersonal)
+                })) : [];
+            } catch (error) {
+                console.error(error);
+                this.$q.notify({ type: "negative", message: "Error al cargar el personal del centro" });
+            }
+
+            const personal = [];
+
+            // Responsable de supervisión
+            if (idRespSupervision) {
+                const idStr = String(idRespSupervision);
+                const encontrado = trabajadores.find(t => t.idPersonal === idStr);
+                personal.push({
+                    idPersonal: idStr,
+                    nombre: respSupervision || (encontrado ? encontrado.nombre : `ID: ${idStr}`),
+                    contrasena: '',
+                    validado: false,
+                    validando: false
+                });
+            }
+
+            // Supervisados
+            const idsSupervisados = this.parseIdSupervisado(idSupervisado);
+            idsSupervisados.forEach(id => {
+                const encontrado = trabajadores.find(t => t.idPersonal === id);
+                personal.push({
+                    idPersonal: id,
+                    nombre: encontrado ? encontrado.nombre : `ID: ${id}`,
+                    contrasena: '',
+                    validado: false,
+                    validando: false
+                });
+            });
+
+            this.personalValidacion = personal;
+            this.loadingCargarPersonal = false;
+
+            if (personal.length === 0) {
+                this.$q.notify({ type: "warning", message: "No se encontró personal para validar en esta ficha" });
+            }
+
+            this.dialogValidarFicha = true;
+        },
+
+        async validarPersonal(item) {
+            if (!item.contrasena) {
+                this.$q.notify({ type: "warning", message: "Ingrese la contraseña" });
+                return;
+            }
+
+            item.validando = true;
+
+            try {
+                const payload = {
+                    idAnexoCabecera: this.fichaAValidar.idAnexoCabecera,
+                    idPersonal: parseInt(item.idPersonal, 10),
+                    contraseña: item.contrasena
+                };
+
+                await this.$axios.post(
+                    `${process.env.API_URL_SIGESU}/validarPersonal`,
+                    payload
+                );
+
+                item.validado = true;
+                item.contrasena = '';
+                this.$q.notify({ type: "positive", message: `${item.nombre} validado correctamente` });
+
+            } catch (error) {
+                console.error(error);
+                this.$q.notify({ type: "negative", message: `Error al validar a ${item.nombre}` });
+            } finally {
+                item.validando = false;
+            }
+        },
+
+        async darConformidad() {
+            if (!this.todosValidados) {
+                this.$q.notify({ type: "warning", message: "Faltan personal por validar" });
+                return;
+            }
+
+            this.validandoConformidad = true;
+
+            try {
+                await this.$axios.post(
+                    `${process.env.API_URL_SIGESU}/validarFichaCompleta`,
+                    {
+                        idAnexoCabecera: this.fichaAValidar.idAnexoCabecera
+                    }
+                );
+
+                this.$q.notify({ type: "positive", message: "Ficha validada con conformidad" });
+                this.dialogValidarFicha = false;
+                this.cargarTablaAnexos();
+
+            } catch (error) {
+                console.error(error);
+                this.$q.notify({ type: "negative", message: "Error al dar conformidad a la ficha" });
+            } finally {
+                this.validandoConformidad = false;
+            }
+        },
+
+        resetValidacion() {
+            this.fichaAValidar = null;
+            this.personalValidacion = [];
+            this.validandoConformidad = false;
         }
 
     },
@@ -2965,6 +3234,11 @@ export default {
 
 
             return totales
+        },
+
+        todosValidados() {
+            return this.personalValidacion.length > 0 
+                && this.personalValidacion.every(p => p.validado === true);
         }
 
     }
