@@ -2942,10 +2942,12 @@ export default {
 
             let idRespSupervision = row.idRespSupervision;
             let respSupervision = row.respSupervision;
+            let idDirector = row.idDirector;
+            let respDirector = row.respDirector;
             let idSupervisado = row.idSupervisado;
 
             // Si la tabla principal no trae los IDs de personal, los obtenemos del detalle
-            if (!idRespSupervision || !respSupervision || !idSupervisado) {
+            if (!idRespSupervision || !respSupervision || !idDirector || !respDirector || !idSupervisado) {
                 try {
                     const res = await this.$axios.get(
                         `${process.env.API_URL_SIGESU}/obtenerRespuestas`,
@@ -2960,6 +2962,8 @@ export default {
                     if (data) {
                         if (!idRespSupervision) idRespSupervision = data.idRespSupervision;
                         if (!respSupervision) respSupervision = data.respSupervision;
+                        if (!idDirector) idDirector = data.idDirector;
+                        if (!respDirector) respDirector = data.respDirector;
                         if (!idSupervisado) idSupervisado = data.idSupervisado;
                     }
                 } catch (error) {
@@ -2995,6 +2999,19 @@ export default {
                 personal.push({
                     idPersonal: idStr,
                     nombre: respSupervision || (encontrado ? encontrado.nombre : `ID: ${idStr}`),
+                    contrasena: '',
+                    validado: false,
+                    validando: false
+                });
+            }
+
+            // Director
+            if (idDirector) {
+                const idStr = String(idDirector);
+                const encontrado = trabajadores.find(t => t.idPersonal === idStr);
+                personal.push({
+                    idPersonal: idStr,
+                    nombre: respDirector || (encontrado ? encontrado.nombre : `ID: ${idStr}`),
                     contrasena: '',
                     validado: false,
                     validando: false
