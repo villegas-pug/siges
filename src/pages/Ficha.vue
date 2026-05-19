@@ -296,20 +296,24 @@
                                                 <tr>
                                                     <td class="text-left text-bold">
                                                         <q-icon name="person" class="q-mr-sm" />
-                                                        SUPERVISADO
+                                                        SUPERVISADO (OS)
                                                     </td>
                                                     <td>
-                                                        <q-select v-model="form.idSupervisado"
-                                                            :options="trabajadoresCentro" option-label="nombre"
-                                                            option-value="idPersonal" use-input input-debounce="400"
-                                                            @filter="buscarTrabajadorCentro" fill-input hide-selected
-                                                            label="Buscar personal del centro" outlined dense clearable
-                                                            :disable="esVisualizacion" style="border: none;" emit-value
-                                                            map-options>
-                                                            <template v-slot:append>
-                                                                <q-icon name="search" />
-                                                            </template>
-                                                        </q-select>
+                                                        <div class="row q-col-gutter-sm items-center">
+                                                            <div class="col">
+                                                                <q-select v-model="form.idsSupervisados"
+                                                                    :options="trabajadoresCentro" option-label="nombre"
+                                                                    option-value="idPersonal" multiple use-chips
+                                                                    label="Seleccionar supervisados" outlined dense
+                                                                    clearable :disable="esVisualizacion"
+                                                                    style="border: none;" emit-value map-options>
+                                                                </q-select>
+                                                            </div>
+                                                            <div class="col-auto" v-if="!esVisualizacion">
+                                                                <q-btn icon="search" flat round dense color="primary"
+                                                                    @click="abrirDialogSupervisados" />
+                                                            </div>
+                                                        </div>
                                                     </td>
                                                 </tr>
 
@@ -631,6 +635,44 @@
 
                     </q-card-section>
 
+                </q-card>
+            </q-dialog>
+
+            <!-- DIALOGO SUPERVISADOS -->
+            <q-dialog v-model="dialogSupervisados" persistent>
+                <q-card style="width: 700px; max-width: 90vw">
+                    <q-card-section class="bg-header-dialog">
+                        <span style="float: right;">
+                            <q-btn icon="close" v-close-popup flat round size="sm"></q-btn>
+                        </span>
+                        <div class="text-body2 text-bold">SELECCIONAR SUPERVISADOS</div>
+                    </q-card-section>
+
+                    <q-card-section>
+                        <q-input dense outlined debounce="300" v-model="filtroSupervisados"
+                            placeholder="Buscar por nombre..." clearable class="q-mb-md">
+                            <template v-slot:append>
+                                <q-icon name="search" />
+                            </template>
+                        </q-input>
+
+                        <q-table :data="trabajadoresCentro" :columns="columnasSupervisados"
+                            row-key="idPersonal" table-header-class="bg-inabif text-bold" dense flat bordered
+                            :filter="filtroSupervisados" selection="multiple"
+                            :selected.sync="selectedSupervisados"
+                            :rows-per-page-options="[10, 20, 50]">
+                            <template v-slot:body-cell-nro="props">
+                                <q-td :props="props">
+                                    {{ props.rowIndex + 1 }}
+                                </q-td>
+                            </template>
+                        </q-table>
+                    </q-card-section>
+
+                    <q-card-actions align="right" class="q-pa-md">
+                        <q-btn label="Cancelar" v-close-popup flat />
+                        <q-btn label="Confirmar" color="primary" @click="confirmarSupervisados" />
+                    </q-card-actions>
                 </q-card>
             </q-dialog>
 
@@ -1270,7 +1312,7 @@ export default {
                 tipoCentro: '',
                 idRespSupervision: null,
                 idDirector: null,
-                idSupervisado: null
+                idsSupervisados: []
 
             },
             // MODELOS
@@ -1385,6 +1427,28 @@ export default {
             loadingCentros: false,
             centroNombre: "",
 
+            dialogSupervisados: false,
+            selectedSupervisados: [],
+            filtroSupervisados: "",
+
+            columnasSupervisados: [
+                {
+                    name: "nro",
+                    label: "N°",
+                    field: "nro",
+                    align: "center",
+                    sortable: false,
+                    style: "width: 50px;"
+                },
+                {
+                    name: "nombre",
+                    label: "NOMBRE",
+                    field: "nombre",
+                    align: "left",
+                    sortable: true
+                }
+            ],
+
             columnasCentros: [
                 {
                     name: "nombreUnidad",
@@ -1458,10 +1522,11 @@ export default {
                 this.form.codigoAnexo2 = row.codigoAnexo2;
                 this.form.nombreUnidad = row.nombreUnidad;
                 this.form.nombreCentro = row.nombreCentro;
+                await this.precargarTrabajadoresCentro();
                 this.form.respDirector = row.respDirector;
                 this.form.idDirector = row.idDirector;
                 this.form.idRespSupervision = row.idRespSupervision;
-                this.form.idSupervisado = row.idSupervisado;
+                this.form.idsSupervisados = this.parseIdSupervisado(row.idSupervisado);
 
                 this.form.tipoCentro = row.tipoCentro;
                 // Marcar modo edición
@@ -1499,9 +1564,10 @@ export default {
                 this.form.codigoAnexo2 = row.codigoAnexo2;
                 this.form.nombreUnidad = row.nombreUnidad;
                 this.form.nombreCentro = row.nombreCentro;
+                await this.precargarTrabajadoresCentro();
                 this.form.respDirector = row.respDirector;
                 this.form.idRespSupervision = row.idRespSupervision;
-                this.form.idSupervisado = row.idSupervisado;
+                this.form.idsSupervisados = this.parseIdSupervisado(row.idSupervisado);
                 this.form.tipoCentro = row.tipoCentro;
                 this.modoEdicion = false;
                 this.modoVisualizacion = true;
@@ -1558,19 +1624,19 @@ export default {
                 this.form.respDirector = data.respDirector;
                 this.form.tipoCentro = data.tipoCentro;
                 this.form.idRespSupervision = data.idRespSupervision;
-                this.form.idSupervisado = data.idSupervisado;
+                this.form.idsSupervisados = this.parseIdSupervisado(data.idSupervisado);
 
                 if (data.idSupervisado && data.nombreSupervisado) {
-                    const existe = this.trabajadoresCentro.find(
-                        x => x.idPersonal === data.idSupervisado
-                    )
-
-                    if (!existe) {
-                        this.trabajadoresCentro.push({
-                            idPersonal: data.idSupervisado,
-                            nombre: data.nombreSupervisado
-                        })
-                    }
+                    const ids = this.parseIdSupervisado(data.idSupervisado);
+                    ids.forEach(id => {
+                        const existe = this.trabajadoresCentro.find(x => x.idPersonal === id);
+                        if (!existe) {
+                            this.trabajadoresCentro.push({
+                                idPersonal: String(id),
+                                nombre: data.nombreSupervisado
+                            });
+                        }
+                    });
                 }
                 // Agrupar respuestas por secciones (cabecera)
                 const secciones = [];
@@ -1766,6 +1832,11 @@ export default {
             this.form.nombreAnexo = anexo?.nombreAnexo || ''
             this.form.codigoAnexo2 = anexo?.codigoAnexo2 || ''
             this.form.fechaRegistro = new Date().toISOString().substring(0, 10)
+            this.form.idsSupervisados = []
+
+            // Precargar todo el personal del centro
+            this.precargarTrabajadoresCentro()
+
             this.dialog = true
 
 
@@ -1855,6 +1926,7 @@ export default {
                 responsable: "",
                 capacidad: null,
                 audioUrl: '',
+                idsSupervisados: []
             };
 
             this.preguntasAgrupadas = [];
@@ -2199,7 +2271,7 @@ export default {
                     fechaRegistro: this.form.fechaRegistro,
                     idRespSupervision: this.form.idRespSupervision,
                     idDirector: this.form.idDirector,
-                    idSupervisado: this.form.idSupervisado,
+                    idSupervisado: this.form.idsSupervisados.join(','),
                     respuestas,
                     totales: {
                         conforme: this.totalesRespuestas.CONFORME,
@@ -2470,13 +2542,65 @@ export default {
                 )
 
                 update(() => {
-                    this.trabajadoresCentro = res.data
+                    this.trabajadoresCentro = res.data.map(t => ({
+                        ...t,
+                        idPersonal: String(t.idPersonal)
+                    }))
                 })
 
             } catch (error) {
                 console.error(error)
             }
 
+        },
+        parseIdSupervisado(idSupervisado) {
+            if (!idSupervisado) return []
+            if (Array.isArray(idSupervisado)) return idSupervisado.map(String)
+            if (typeof idSupervisado === 'number') return [String(idSupervisado)]
+            if (typeof idSupervisado === 'string') {
+                return idSupervisado
+                    .split(',')
+                    .map(s => s.trim())
+                    .filter(Boolean)
+            }
+            return []
+        },
+        async precargarTrabajadoresCentro() {
+            if (!this.form.nombreCentro) return
+            try {
+                const res = await this.$axios.get(
+                    process.env.API_URL_SIGESU + "/responsables-centro",
+                    {
+                        params: {
+                            nombreCentro: this.form.nombreCentro
+                        }
+                    }
+                )
+                this.trabajadoresCentro = res.data.map(t => ({
+                    ...t,
+                    idPersonal: String(t.idPersonal)
+                }))
+            } catch (error) {
+                console.error(error)
+            }
+        },
+        abrirDialogSupervisados() {
+            this.selectedSupervisados = []
+            this.filtroSupervisados = ''
+            // Pre-seleccionar los ya elegidos
+            this.selectedSupervisados = this.trabajadoresCentro.filter(
+                t => this.form.idsSupervisados.includes(t.idPersonal)
+            )
+            this.dialogSupervisados = true
+        },
+        confirmarSupervisados() {
+            const nuevosIds = this.selectedSupervisados.map(s => s.idPersonal)
+            // Fusionar sin duplicados
+            this.form.idsSupervisados = [...new Set([
+                ...this.form.idsSupervisados,
+                ...nuevosIds
+            ])]
+            this.dialogSupervisados = false
         },
         validarPregunta(pregunta) {
 
