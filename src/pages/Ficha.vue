@@ -87,6 +87,8 @@
                         <template v-slot:body-cell-estado="props">
                             <q-td :props="props">
                                 <q-chip
+                                    class="chip-estado"
+                                    :class="`chip-estado--${String(props.row.estado)}`"
                                     :color="estadosMap[props.row.estado]?.color || 'grey'"
                                     :text-color="estadosMap[props.row.estado]?.textColor || 'white'"
                                     :icon="estadosMap[props.row.estado]?.icon || 'help'"
@@ -1453,6 +1455,31 @@ audio {
     display: block;
 }
 
+.chip-estado {
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+}
+
+.chip-estado .q-chip__icon {
+    font-size: 16px;
+}
+
+.chip-estado--1 {
+    background: linear-gradient(135deg, #1faa59 0%, #2ecc71 100%);
+}
+
+.chip-estado--2 {
+    background: linear-gradient(135deg, #1565c0 0%, #1e88e5 100%);
+}
+
+.chip-estado--0 {
+    background: linear-gradient(135deg, #c62828 0%, #ef5350 100%);
+}
+
 /* ================================
    ESTILOS TABLA VALIDAR FICHA
    ================================ */
@@ -1574,6 +1601,7 @@ export default {
             ],
             estadosMap: {
                 1: { label: 'REGISTRADO', color: 'positive', textColor: 'white', icon: 'check_circle' },
+                2: { label: 'SUSCRITO', color: 'info', textColor: 'white', icon: 'verified' },
                 0: { label: 'ANULADO',    color: 'negative', textColor: 'white', icon: 'cancel' }
             },
             esSumable: true,
@@ -1703,7 +1731,7 @@ export default {
                     align: "center",
                     sortable: true,
                     sort: (a, b) => {
-                        const map = { 1: 'REGISTRADO', 0: 'ANULADO' };
+                        const map = { 1: 'REGISTRADO', 2: 'SUSCRITO', 0: 'ANULADO' };
                         return (map[a] || '').localeCompare(map[b] || '');
                     },
                     style: "width: 130px; min-width: 130px; max-width: 130px;"
