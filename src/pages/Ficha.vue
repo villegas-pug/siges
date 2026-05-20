@@ -708,6 +708,7 @@
                             row-key="idPersonal" 
                             table-header-class="bg-inabif text-bold" 
                             dense flat bordered
+                            class="tabla-validar-ficha"
                             :rows-per-page-options="[0]"
                             hide-bottom>
                             
@@ -719,25 +720,50 @@
 
                             <template v-slot:body-cell-validar="props">
                                 <q-td :props="props">
-                                    <q-chip v-if="props.row.validado" color="positive" text-color="white" icon="check" size="sm">
-                                        Validado
-                                    </q-chip>
-                                    <div v-else class="row q-gutter-sm items-center justify-center">
+                                    <!-- Ya validado -->
+                                    <div v-if="props.row.validado" class="row justify-center items-center">
+                                        <q-icon name="verified_user" color="positive" size="28px">
+                                            <q-tooltip>Validado</q-tooltip>
+                                        </q-icon>
+                                    </div>
+                                    <!-- Mostrar input -->
+                                    <div v-else-if="mostrarInputValidar[props.row.idPersonal]" class="row q-gutter-xs items-center justify-center">
                                         <q-input 
                                             v-model="props.row.contrasena" 
                                             type="password" 
                                             outlined dense 
-                                            placeholder="Contraseña"
-                                            style="width: 140px"
+                                            placeholder="Ingrese contraseña"
+                                            class="input-validar"
                                             :disable="props.row.validando"
-                                            @keyup.enter="validarPersonal(props.row)" />
+                                            @keyup.enter="validarPersonal(props.row)">
+                                            <template v-slot:append>
+                                                <q-btn 
+                                                    round dense flat
+                                                    icon="check"
+                                                    color="positive"
+                                                    :loading="props.row.validando"
+                                                    :disable="!props.row.contrasena"
+                                                    @click="validarPersonal(props.row)" />
+                                            </template>
+                                        </q-input>
                                         <q-btn 
-                                            label="Validar" 
-                                            color="primary" 
-                                            size="sm" 
-                                            :loading="props.row.validando"
-                                            :disable="!props.row.contrasena"
-                                            @click="validarPersonal(props.row)" />
+                                            round dense flat
+                                            icon="close"
+                                            color="grey"
+                                            size="sm"
+                                            @click="$set(mostrarInputValidar, props.row.idPersonal, false)" />
+                                    </div>
+                                    <!-- Botón para mostrar input -->
+                                    <div v-else class="row justify-center items-center">
+                                        <q-btn 
+                                            round
+                                            color="inabif"
+                                            text-color="white"
+                                            icon="verified_user"
+                                            size="sm"
+                                            @click="$set(mostrarInputValidar, props.row.idPersonal, true)">
+                                            <q-tooltip>Validar personal</q-tooltip>
+                                        </q-btn>
                                     </div>
                                 </q-td>
                             </template>
@@ -1307,6 +1333,68 @@ audio {
     width: 100%;
     display: block;
 }
+
+/* ================================
+   ESTILOS TABLA VALIDAR FICHA
+   ================================ */
+
+.tabla-validar-ficha .q-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+.tabla-validar-ficha .q-table th {
+    background: linear-gradient(135deg, #BF0411 0%, #d63031 100%);
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.8rem;
+    padding: 12px 16px;
+}
+
+.tabla-validar-ficha .q-table td {
+    padding: 12px 16px;
+    vertical-align: middle;
+}
+
+.tabla-validar-ficha .q-table tbody tr:nth-child(even) {
+    background-color: #fafbfc;
+}
+
+.tabla-validar-ficha .q-table tbody tr:hover {
+    background-color: #f0f4f8;
+}
+
+/* Input de validación estilizado */
+.input-validar .q-field__control {
+    border-radius: 20px;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    padding-right: 4px;
+}
+
+.input-validar .q-field__control:hover {
+    border-color: #BF0411;
+}
+
+.input-validar.q-field--focused .q-field__control {
+    border-color: #BF0411;
+    box-shadow: 0 0 0 3px rgba(191, 4, 17, 0.12);
+}
+
+.input-validar input {
+    font-size: 0.9rem;
+}
+
+/* Botón circular de validar */
+.btn-validar-icon {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    border-radius: 50%;
+    padding: 0;
+}
 </style>
 
 <script>
@@ -1601,7 +1689,8 @@ export default {
                 }
             ],
             validandoConformidad: false,
-            loadingCargarPersonal: false
+            loadingCargarPersonal: false,
+            mostrarInputValidar: {}
 
         }
     },
@@ -2405,6 +2494,15 @@ export default {
                         payload
                     );
 
+                    // Resetear validaciones previas al editar
+                    try {
+                        await this.$axios.delete(
+                            `${process.env.API_URL_SIGESU}/resetValidacionAnexoCabecera?idAnexoCabecera=${this.form.idAnexoCabecera}`
+                        );
+                    } catch (resetError) {
+                        console.error('Error al resetear validaciones:', resetError);
+                    }
+
                 } else {
 
                     payload.usuRegistra = parseInt(this.$q.localStorage.getItem('sgs-idUsuario'));
@@ -2418,7 +2516,7 @@ export default {
 
                 this.$q.notify({
                     type: "positive",
-                    message: this.modoEdicion ? "Actualizado correctamente" : "Registrado correctamente"
+                    message: this.modoEdicion ? "Actualizado correctamente. Las validaciones previas han sido reseteadas." : "Registrado correctamente"
                 });
 
                 this.dialog = false;
@@ -2938,6 +3036,7 @@ export default {
         async abrirDialogValidarFicha(row) {
             this.fichaAValidar = row;
             this.personalValidacion = [];
+            this.mostrarInputValidar = {};
             this.loadingCargarPersonal = true;
 
             let idRespSupervision = row.idRespSupervision;
@@ -2945,6 +3044,7 @@ export default {
             let idDirector = row.idDirector;
             let respDirector = row.respDirector;
             let idSupervisado = row.idSupervisado;
+            let idsPersonalValida = [];
 
             // Si la tabla principal no trae los IDs de personal, los obtenemos del detalle
             if (!idRespSupervision || !respSupervision || !idDirector || !respDirector || !idSupervisado) {
@@ -2965,6 +3065,12 @@ export default {
                         if (!idDirector) idDirector = data.idDirector;
                         if (!respDirector) respDirector = data.respDirector;
                         if (!idSupervisado) idSupervisado = data.idSupervisado;
+                        if (data.idsPersonalValida) {
+                            idsPersonalValida = String(data.idsPersonalValida)
+                                .split(',')
+                                .map(s => s.trim())
+                                .filter(Boolean);
+                        }
                     }
                 } catch (error) {
                     console.error(error);
@@ -2995,12 +3101,13 @@ export default {
             // Responsable de supervisión
             if (idRespSupervision) {
                 const idStr = String(idRespSupervision);
+                const yaValidado = idsPersonalValida.includes(idStr);
                 const encontrado = trabajadores.find(t => t.idPersonal === idStr);
                 personal.push({
                     idPersonal: idStr,
                     nombre: respSupervision || (encontrado ? encontrado.nombre : `ID: ${idStr}`),
                     contrasena: '',
-                    validado: false,
+                    validado: yaValidado,
                     validando: false
                 });
             }
@@ -3008,12 +3115,13 @@ export default {
             // Director
             if (idDirector) {
                 const idStr = String(idDirector);
+                const yaValidado = idsPersonalValida.includes(idStr);
                 const encontrado = trabajadores.find(t => t.idPersonal === idStr);
                 personal.push({
                     idPersonal: idStr,
                     nombre: respDirector || (encontrado ? encontrado.nombre : `ID: ${idStr}`),
                     contrasena: '',
-                    validado: false,
+                    validado: yaValidado,
                     validando: false
                 });
             }
@@ -3021,12 +3129,13 @@ export default {
             // Supervisados
             const idsSupervisados = this.parseIdSupervisado(idSupervisado);
             idsSupervisados.forEach(id => {
+                const yaValidado = idsPersonalValida.includes(id);
                 const encontrado = trabajadores.find(t => t.idPersonal === id);
                 personal.push({
                     idPersonal: id,
                     nombre: encontrado ? encontrado.nombre : `ID: ${id}`,
                     contrasena: '',
-                    validado: false,
+                    validado: yaValidado,
                     validando: false
                 });
             });
@@ -3050,19 +3159,13 @@ export default {
             item.validando = true;
 
             try {
-                const payload = {
-                    idAnexoCabecera: this.fichaAValidar.idAnexoCabecera,
-                    idPersonal: parseInt(item.idPersonal, 10),
-                    contraseña: item.contrasena
-                };
-
-                await this.$axios.post(
-                    `${process.env.API_URL_SIGESU}/validarPersonal`,
-                    payload
+                await this.$axios.patch(
+                    `${process.env.API_URL_SIGESU}/validatePersonalAnexoCabecera?idAnexoCabecera=${this.fichaAValidar.idAnexoCabecera}&idPersonal=${item.idPersonal}&password=${encodeURIComponent(item.contrasena)}`
                 );
 
                 item.validado = true;
                 item.contrasena = '';
+                this.$set(this.mostrarInputValidar, item.idPersonal, false);
                 this.$q.notify({ type: "positive", message: `${item.nombre} validado correctamente` });
 
             } catch (error) {
@@ -3082,11 +3185,8 @@ export default {
             this.validandoConformidad = true;
 
             try {
-                await this.$axios.post(
-                    `${process.env.API_URL_SIGESU}/validarFichaCompleta`,
-                    {
-                        idAnexoCabecera: this.fichaAValidar.idAnexoCabecera
-                    }
+                await this.$axios.patch(
+                    `${process.env.API_URL_SIGESU}/saveConformidadAnexoCabecera?idAnexoCabecera=${this.fichaAValidar.idAnexoCabecera}&estado=2`
                 );
 
                 this.$q.notify({ type: "positive", message: "Ficha validada con conformidad" });
