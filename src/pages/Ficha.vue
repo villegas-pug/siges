@@ -165,7 +165,7 @@
                                             <q-item-section>Ver Evaluación</q-item-section>
                                         </q-item>
                                         <!-- Visualizar Evaluación -->
-                                        <q-item clickable v-close-popup @click="agregarAudio(scope.row)">
+                                        <q-item clickable v-close-popup @click="abrirDialogAudios(scope.row)">
                                             <q-item-section avatar>
                                                 <q-avatar icon="mic" color="red" text-color="white" />
                                             </q-item-section>
@@ -784,6 +784,124 @@
                             :loading="validandoConformidad"
                             :disable="!todosValidados"
                             @click="darConformidad" />
+                    </q-card-actions>
+                </q-card>
+            </q-dialog>
+
+            <!-- DIALOGO GESTION DE AUDIOS -->
+            <q-dialog v-model="dialogAudios" persistent @hide="limpiarAudioDialog">
+                <q-card style="width: 700px; max-width: 90vw">
+                    <q-card-section class="bg-header-dialog">
+                        <span style="float: right;">
+                            <q-btn icon="close" v-close-popup flat round size="sm"></q-btn>
+                        </span>
+                        <div class="text-body2 text-bold">GESTIÓN DE AUDIOS</div>
+                        <div class="text-caption" v-if="audioRow">
+                            {{ audioRow.codigoAnexo2 }} - Correlativo: {{ audioRow.correlativo }}
+                        </div>
+                    </q-card-section>
+
+                    <q-card-section>
+                        <!-- Zona de subida / reemplazo -->
+                        <div class="row q-col-gutter-sm items-center q-mb-md">
+                            <div class="col">
+                                <q-file
+                                    v-model="audioFile"
+                                    label="Seleccionar audio"
+                                    outlined
+                                    dense
+                                    accept="audio/*"
+                                    clearable
+                                    :disable="loadingAudios"
+                                >
+                                    <template v-slot:prepend>
+                                        <q-icon name="attach_file" />
+                                    </template>
+                                </q-file>
+                            </div>
+                            <div class="col-auto">
+                                <q-btn
+                                    v-if="!audioReemplazando"
+                                    label="Subir"
+                                    icon="upload"
+                                    class="btn-inabif"
+                                    size="sm"
+                                    :loading="loadingAudios"
+                                    :disable="!audioFile"
+                                    @click="subirAudio"
+                                />
+                                <q-btn
+                                    v-else
+                                    label="Reemplazar"
+                                    icon="swap_horiz"
+                                    class="btn-inabif"
+                                    size="sm"
+                                    :loading="loadingAudios"
+                                    :disable="!audioFile"
+                                    @click="subirAudio"
+                                />
+                            </div>
+                            <div class="col-auto" v-if="audioReemplazando">
+                                <q-btn
+                                    label="Cancelar"
+                                    icon="close"
+                                    flat
+                                    size="sm"
+                                    color="grey"
+                                    @click="cancelarReemplazo"
+                                />
+                            </div>
+                        </div>
+
+                        <div v-if="audioReemplazando" class="text-caption text-grey q-mb-sm">
+                            Reemplazando: <strong>{{ audioReemplazando.nombreArchivo }}</strong>
+                        </div>
+
+                        <!-- Tabla de audios -->
+                        <q-table
+                            :data="audiosList"
+                            :columns="columnasAudios"
+                            row-key="idAudio"
+                            table-header-class="bg-inabif text-bold"
+                            dense flat bordered
+                            :loading="loadingAudios"
+                            :rows-per-page-options="[10, 20, 50]"
+                        >
+                            <template v-slot:body-cell-nro="props">
+                                <q-td :props="props">
+                                    {{ props.rowIndex + 1 }}
+                                </q-td>
+                            </template>
+
+                            <template v-slot:body-cell-acciones="props">
+                                <q-td :props="props">
+                                    <q-btn icon="play_circle" color="primary" flat round size="sm" @click="reproducirAudio(props.row)">
+                                        <q-tooltip>Reproducir</q-tooltip>
+                                    </q-btn>
+                                    <q-btn icon="edit" color="warning" flat round size="sm" @click="iniciarReemplazo(props.row)">
+                                        <q-tooltip>Reemplazar</q-tooltip>
+                                    </q-btn>
+                                    <q-btn icon="delete" color="negative" flat round size="sm" @click="eliminarAudio(props.row)">
+                                        <q-tooltip>Eliminar</q-tooltip>
+                                    </q-btn>
+                                </q-td>
+                            </template>
+
+                            <template v-slot:no-data>
+                                <div class="full-width row flex-center q-pa-md text-grey">
+                                    No hay audios registrados
+                                </div>
+                            </template>
+                        </q-table>
+
+                        <!-- Reproductor -->
+                        <div v-if="audioBlobUrl" class="q-mt-md">
+                            <audio controls :src="audioBlobUrl" type="audio/mpeg" style="width:100%; height: 40px; border-radius: 6px;"></audio>
+                        </div>
+                    </q-card-section>
+
+                    <q-card-actions align="right" class="q-pa-md">
+                        <q-btn label="Cerrar" v-close-popup flat />
                     </q-card-actions>
                 </q-card>
             </q-dialog>
@@ -1690,7 +1808,20 @@ export default {
             ],
             validandoConformidad: false,
             loadingCargarPersonal: false,
-            mostrarInputValidar: {}
+            mostrarInputValidar: {},
+
+            dialogAudios: false,
+            audioRow: null,
+            audiosList: [],
+            loadingAudios: false,
+            audioFile: null,
+            audioBlobUrl: null,
+            audioReemplazando: null,
+            columnasAudios: [
+                { name: "nro", label: "N°", field: "nro", align: "center", sortable: false, style: "width: 50px;" },
+                { name: "nombreArchivo", label: "NOMBRE DE ARCHIVO", field: "nombreArchivo", align: "left", sortable: true },
+                { name: "acciones", label: "ACCIONES", field: "acciones", align: "center", style: "width: 180px;" }
+            ]
 
         }
     },
@@ -2658,53 +2789,169 @@ export default {
                 console.error(error);
             }
         },
-        async agregarAudio(row) {
+        getAudioUrl(file) {
+            return `${process.env.API_URL_SIGESU}/uploads/audios/${file}`;
+        },
 
-            const input = document.createElement("input");
-            input.type = "file";
-            input.accept = "audio/*";
+        abrirDialogAudios(row) {
+            this.audioRow = row;
+            this.dialogAudios = true;
+            this.cargarAudios();
+        },
 
-            input.onchange = async (event) => {
+        async cargarAudios() {
+            if (!this.audioRow) return;
+            this.loadingAudios = true;
+            try {
+                const res = await this.$axios.get(
+                    `${process.env.API_URL_SIGESU}/anexo-cabecera-audio/listar`,
+                    {
+                        params: { idAnexoCabecera: this.audioRow.idAnexoCabecera }
+                    }
+                );
+                const data = res.data?.data || [];
+                this.audiosList = data.map(item => ({
+                    idAudio: item.ACA_ID_AUDIO,
+                    nombreArchivo: item.ACA_NOMBRE_ARCHIVO,
+                    estado: item.ACA_ESTADO
+                }));
+            } catch (error) {
+                console.error(error);
+                this.$q.notify({ type: "negative", message: "Error al cargar audios" });
+            } finally {
+                this.loadingAudios = false;
+            }
+        },
 
-                const file = event.target.files[0];
-                if (!file) return;
+        async subirAudio() {
+            if (!this.audioFile) {
+                this.$q.notify({ type: "warning", message: "Seleccione un archivo de audio" });
+                return;
+            }
 
+            this.loadingAudios = true;
+            try {
                 const formData = new FormData();
-                formData.append("audio", file);
-                formData.append("idAnexoCabecera", row.idAnexoCabecera);
+                formData.append("audio", this.audioFile);
 
-                try {
-                    await this.$axios.post(
-                        `${process.env.API_URL_SIGESU}/anexo/upload-audio`,
-                        //"http://10.101.0.8:4004/api/ms-sigesu/anexo/upload-audio",
+                if (this.audioReemplazando) {
+                    formData.append("idAudio", this.audioReemplazando.idAudio);
+                    formData.append("estado", 1);
+
+                    await this.$axios.put(
+                        `${process.env.API_URL_SIGESU}/anexo-cabecera-audio`,
                         formData,
                         {
                             headers: { "Content-Type": "multipart/form-data" }
                         }
                     );
 
-                    this.$q.notify({
-                        type: "positive",
-                        message: "Audio subido correctamente"
-                    });
+                    this.$q.notify({ type: "positive", message: "Audio reemplazado correctamente" });
+                    this.audioReemplazando = null;
+                } else {
+                    formData.append("idAnexoCabecera", this.audioRow.idAnexoCabecera);
 
-                    this.cargarTablaAnexos();
+                    await this.$axios.post(
+                        `${process.env.API_URL_SIGESU}/anexo-cabecera-audio`,
+                        formData,
+                        {
+                            headers: { "Content-Type": "multipart/form-data" }
+                        }
+                    );
 
-                } catch (error) {
-                    console.error(error);
-                    this.$q.notify({
-                        type: "negative",
-                        message: "Error al subir audio"
-                    });
+                    this.$q.notify({ type: "positive", message: "Audio subido correctamente" });
                 }
 
-            };
-
-            input.click();
+                this.audioFile = null;
+                this.cargarAudios();
+            } catch (error) {
+                console.error(error);
+                this.$q.notify({ type: "negative", message: "Error al guardar el audio" });
+            } finally {
+                this.loadingAudios = false;
+            }
         },
 
-        getAudioUrl(file) {
-            return `${process.env.API_URL_SIGESU}/uploads/audios/${file}`;
+        iniciarReemplazo(row) {
+            this.audioReemplazando = row;
+            this.audioFile = null;
+            this.$q.notify({ type: "info", message: `Seleccione el nuevo archivo para reemplazar: ${row.nombreArchivo}` });
+        },
+
+        cancelarReemplazo() {
+            this.audioReemplazando = null;
+            this.audioFile = null;
+        },
+
+        async eliminarAudio(row) {
+            this.$q.dialog({
+                title: "Confirmar eliminación",
+                message: `¿Eliminar el audio <strong>${row.nombreArchivo}</strong>?`,
+                html: true,
+                cancel: true,
+                persistent: true
+            }).onOk(async () => {
+                this.loadingAudios = true;
+                try {
+                    await this.$axios.delete(
+                        `${process.env.API_URL_SIGESU}/anexo-cabecera-audio`,
+                        {
+                            params: { idAudio: row.idAudio }
+                        }
+                    );
+
+                    this.$q.notify({ type: "positive", message: "Audio eliminado correctamente" });
+
+                    if (this.audioReemplazando && this.audioReemplazando.idAudio === row.idAudio) {
+                        this.audioReemplazando = null;
+                        this.audioFile = null;
+                    }
+
+                    this.liberarAudioBlob();
+                    this.cargarAudios();
+                } catch (error) {
+                    console.error(error);
+                    this.$q.notify({ type: "negative", message: "Error al eliminar el audio" });
+                } finally {
+                    this.loadingAudios = false;
+                }
+            });
+        },
+
+        async reproducirAudio(row) {
+            try {
+                const res = await this.$axios.get(
+                    `${process.env.API_URL_SIGESU}/anexo-cabecera-audio`,
+                    {
+                        params: {
+                            idAnexoCabecera: this.audioRow.idAnexoCabecera,
+                            idAudio: row.idAudio
+                        },
+                        responseType: "blob"
+                    }
+                );
+
+                this.liberarAudioBlob();
+                this.audioBlobUrl = window.URL.createObjectURL(res.data);
+            } catch (error) {
+                console.error(error);
+                this.$q.notify({ type: "negative", message: "Error al reproducir el audio" });
+            }
+        },
+
+        liberarAudioBlob() {
+            if (this.audioBlobUrl) {
+                window.URL.revokeObjectURL(this.audioBlobUrl);
+                this.audioBlobUrl = null;
+            }
+        },
+
+        limpiarAudioDialog() {
+            this.audioRow = null;
+            this.audiosList = [];
+            this.audioFile = null;
+            this.audioReemplazando = null;
+            this.liberarAudioBlob();
         },
 
         async cargarResponsables() {
