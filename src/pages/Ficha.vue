@@ -80,7 +80,7 @@
             <div class="q-pa-md">
                 <div class="col-12">
 
-                    <q-table class="tabla-anexos" :data="dataTableAnexos" :columns="columnasTableAnexos" row-key="idAnexoCabecera"
+                    <q-table class="tabla-anexos" :data="dataTableFiltrada" :columns="columnasTableAnexos" row-key="idAnexoCabecera"
                         table-header-class="bg-inabif text-bold" :rows-per-page-options="[10, 20, 50]"
                         :filter="filtroTabla" :loading="loadingTabla" dense flat bordered>
                         <!-- SLOT PARA ESTADO -->
@@ -1627,6 +1627,7 @@ export default {
                 { id: '20262', anio: '2026 - 2' },
                 { id: '20271', anio: '2027 - 1' },
                 // { id: '2028', anio: '2028' },
+                { id: null, anio: 'TODOS' }
             ],
             modoSupervision: null,
             modalidades: [
@@ -1642,6 +1643,7 @@ export default {
             tipos: [
                 { id: 'PROGRAMADA', nombreTipo: 'PROGRAMADA' },
                 { id: 'INOPINADA', nombreTipo: 'INOPINADA' },
+                { id: null, nombreTipo: 'TODOS' }
             ],
             estadosMap: {
                 1: { label: 'REGISTRADO', color: 'positive', textColor: 'white', icon: 'check_circle' },
@@ -1701,16 +1703,36 @@ export default {
             filtroTabla: "",
 
             dataTableAnexos: [],
+            anexosRaw: [],
 
             columnasTableAnexos: [
                 {
                     name: "idAnexoCabecera",
                     label: "ID",
                     field: "idAnexoCabecera",
+                    format: (val) => String(val).padStart(5, '0'),
                     align: "center",
                     sortable: true,
                     sort: (a, b) => parseInt(a, 10) - parseInt(b, 10),
                     style: "width: 70px; min-width: 70px; max-width: 70px;",
+                    classes: "ellipsis-cell"
+                },
+                {
+                    name: "periodo",
+                    label: "PERIODO",
+                    field: "periodo",
+                    align: "center",
+                    sortable: true,
+                    style: "width: 100px; min-width: 100px; max-width: 100px;",
+                    classes: "ellipsis-cell"
+                },
+                {
+                    name: "tipo",
+                    label: "TIPO",
+                    field: "tipo",
+                    align: "center",
+                    sortable: true,
+                    style: "width: 120px; min-width: 120px; max-width: 120px;",
                     classes: "ellipsis-cell"
                 },
                 {
@@ -2154,7 +2176,7 @@ export default {
                 )
 
                 // si tu backend devuelve { data: [...] }
-                this.dataTableAnexos = res.data.data || res.data
+                this.anexosRaw = res.data.data || res.data
 
             } catch (error) {
 
@@ -2795,6 +2817,7 @@ export default {
                 const res = await axios.get(`${process.env.API_URL_SIGESU}/anexo/unidadesSugesu`);
                 //const res = await axios.get('http://10.101.0.8:4004/api/ms-sigesu/anexo/unidadesSugesu');
                 this.unidades = res.data.data || [];
+                this.unidades.push({ idUnidad: null, nombreUnidad: 'TODOS' });
             } catch (error) {
                 console.error(error);
                 this.$q.notify({ type: 'negative', message: 'Error al cargar unidades' });
@@ -3660,6 +3683,29 @@ export default {
         },
         modoEdicion() {
             return this.modo === "editar";
+        },
+
+        dataTableFiltrada() {
+            // Si no hay ningun filtro activo, devolver todos los registros
+            if (!this.anioSeleccionado && !this.tipoFicha && !this.unidadSeleccionada &&
+                !this.servicioSeleccionado && !this.centroSeleccionado && !this.anexoSeleccionado) {
+                return this.anexosRaw;
+            }
+
+            // Obtener nombres de los objetos seleccionados para comparacion exacta
+            const unidad = this.unidades.find(u => u.idUnidad === this.unidadSeleccionada);
+            const servicio = this.servicios.find(s => s.idServicio === this.servicioSeleccionado);
+            const centro = this.centroSeleccionado;
+
+            return this.anexosRaw.filter(row => {
+                if (this.anioSeleccionado && row.periodo !== this.anioSeleccionado) return false;
+                if (this.tipoFicha && row.tipo !== this.tipoFicha) return false;
+                if (this.unidadSeleccionada && row.nombreUnidad !== (unidad?.nombreUnidad || '')) return false;
+                if (this.servicioSeleccionado && row.nombreServicio !== (servicio?.nombreServicio || '')) return false;
+                if (this.centroSeleccionado && row.nombreCentro !== (centro?.nombreUnidad || '')) return false;
+                if (this.anexoSeleccionado && row.idAnexo !== this.anexoSeleccionado) return false;
+                return true;
+            });
         },
 
         codigosConTotales() {
