@@ -1584,7 +1584,7 @@ export default {
                 { id: '20271', anio: '2027 - 1' },
                 // { id: '2028', anio: '2028' },
             ],
-            modoSupervision: 'PRESENCIAL',
+            modoSupervision: null,
             modalidades: [
                 { id: 'presencial', modo: 'PRESENCIAL' },
                 { id: 'virtual', modo: 'NO PRESENCIAL' },
@@ -2140,6 +2140,7 @@ export default {
         abrirDialog() {
             this.modo = "nuevo";
             this.seccionAbierta = null;
+            this.modoSupervision = null;
             if (!this.anioSeleccionado) {
                 this.$q.notify({
                     type: 'warning',
@@ -2802,6 +2803,7 @@ export default {
         resetModo() {
             this.modo = null;
             this.seccionAbierta = null;
+            this.modoSupervision = null;
         },
 
         async descargarPDF() {
