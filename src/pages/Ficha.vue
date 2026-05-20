@@ -917,14 +917,16 @@
 .ficha-dialog {
     width: 95%;
     max-width: 900px;
+    margin: 0 auto;
 }
 
 .ficha-scroll-wrapper {
     display: flex;
     flex-direction: column;
     max-height: 80vh;
-    min-width: 640px;
-    overflow-x: auto;
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
 }
 
 .tabla-scroll-container {
@@ -933,6 +935,7 @@
 }
 
 .tabla-scroll-container .q-markup-table {
+    width: 100%;
     min-width: 500px;
 }
 
@@ -1133,6 +1136,12 @@
     padding-left: 16px;
 }
 
+.datos-generales-tabla .q-field,
+.datos-generales-tabla .q-input,
+.datos-generales-tabla .q-select {
+    width: 100%;
+}
+
 .seccion-expansion {
     margin-bottom: 20px;
     border-radius: 8px;
@@ -1268,7 +1277,42 @@
     .ficha-dialog {
         width: 100%;
         max-width: 100%;
-        margin: 8px;
+        margin: 0;
+        border-radius: 0;
+    }
+
+    .ficha-scroll-wrapper {
+        max-height: 100vh;
+    }
+
+    .tabla-scroll-container .q-markup-table {
+        min-width: 0;
+    }
+
+    .datos-generales-tabla tbody tr {
+        display: block;
+        border-bottom: 1px solid #e6ecf2;
+        padding: 8px 0;
+    }
+
+    .datos-generales-tabla tbody td {
+        display: block;
+        width: 100%;
+        padding: 8px 10px !important;
+        white-space: normal;
+        text-align: left;
+    }
+
+    .datos-generales-tabla td:first-child {
+        min-width: 0;
+        font-weight: 700;
+        color: #34495e;
+        padding-bottom: 4px !important;
+    }
+
+    .datos-generales-tabla td:last-child {
+        padding-left: 10px !important;
+        padding-top: 2px !important;
     }
     
     .seccion-expansion .q-expansion-item__content {
@@ -1846,6 +1890,8 @@ export default {
             audioFile: null,
             audioBlobUrl: null,
             audioReemplazando: null,
+            fichaPeriodo: null,
+            fichaTipo: null,
             columnasAudios: [
                 { name: "nro", label: "N°", field: "nro", align: "center", sortable: false, style: "width: 50px;" },
                 { name: "nombreArchivo", label: "NOMBRE DE ARCHIVO", field: "nombreArchivo", align: "left", sortable: true },
@@ -1892,6 +1938,11 @@ export default {
                 this.form.idsSupervisados = this.parseIdSupervisado(row.idSupervisado);
 
                 this.form.tipoCentro = row.tipoCentro;
+
+                // Capturar periodo y tipo desde la fila para modo edición
+                this.fichaPeriodo = row.periodo;
+                this.fichaTipo = row.tipo;
+
                 // Marcar modo edición
                 this.modoEdicion = true;
 
@@ -1932,6 +1983,11 @@ export default {
                 this.form.idRespSupervision = row.idRespSupervision;
                 this.form.idsSupervisados = this.parseIdSupervisado(row.idSupervisado);
                 this.form.tipoCentro = row.tipoCentro;
+
+                // Capturar periodo y tipo desde la fila para modo visualización
+                this.fichaPeriodo = row.periodo;
+                this.fichaTipo = row.tipo;
+
                 this.modoEdicion = false;
                 this.modoVisualizacion = true;
 
@@ -2140,6 +2196,10 @@ export default {
         abrirDialog() {
             this.modo = "nuevo";
             this.seccionAbierta = null;
+
+            // Capturar periodo y tipo desde los combos de la pantalla principal
+            this.fichaPeriodo = this.anioSeleccionado;
+            this.fichaTipo = this.tipoFicha;
             this.modoSupervision = null;
             if (!this.anioSeleccionado) {
                 this.$q.notify({
@@ -2647,6 +2707,8 @@ export default {
                     idAnexo: this.form.idAnexo,
                     idCentro: this.form.idCentro,
                     correlativo: this.form.correlativo,
+                    periodo: this.fichaPeriodo,
+                    tipo: this.fichaTipo,
                     fechaAplicacion: new Date().toISOString().split('T')[0],
                     fechaRegistro: this.form.fechaRegistro,
                     idRespSupervision: this.form.idRespSupervision,
