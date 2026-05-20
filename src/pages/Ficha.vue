@@ -71,7 +71,8 @@
 
             <div class="row">
                 <div class="col-12 q-gutter-sm text-right q-mt-sm q-mb-md">
-                    <q-btn label="NUEVO" icon="add" class="btn-inabif" size="sm" @click="abrirDialog" />
+                    <q-btn label="NUEVO" icon="add" class="btn-inabif" size="sm" @click="abrirDialog"
+                        :disable="!puedeCrearNuevo" />
                     <q-btn label="EXCEL" icon="download" color="green" class="btn-seccion-acciones" size="sm" />
                 </div>
             </div>
@@ -2111,6 +2112,22 @@ export default {
         abrirDialog() {
             this.modo = "nuevo";
             this.seccionAbierta = null;
+            if (!this.anioSeleccionado) {
+                this.$q.notify({
+                    type: 'warning',
+                    message: 'Debe seleccionar: PERIODO'
+                })
+                return
+            }
+
+            if (!this.tipoFicha) {
+                this.$q.notify({
+                    type: 'warning',
+                    message: 'Debe seleccionar: TIPO'
+                })
+                return
+            }
+
             if (!this.unidadSeleccionada) {
                 this.$q.notify({
                     type: 'warning',
@@ -3522,6 +3539,14 @@ export default {
             const valor = this.acreVigente?.toString().toUpperCase()
 
             return valor === "1" || valor === "SI"
+        },
+        puedeCrearNuevo() {
+            return !!this.anioSeleccionado &&
+                !!this.tipoFicha &&
+                !!this.unidadSeleccionada &&
+                !!this.servicioSeleccionado &&
+                !!this.centroSeleccionado &&
+                !!this.anexoSeleccionado
         },
         tituloAnexo() {
 
