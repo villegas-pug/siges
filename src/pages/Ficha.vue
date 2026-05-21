@@ -688,19 +688,19 @@
 
             <!-- DIALOGO VALIDAR FICHA -->
             <q-dialog v-model="dialogValidarFicha" persistent @hide="resetValidacion">
-                <q-card style="width: 700px; max-width: 90vw">
-                    <q-card-section class="bg-header-dialog">
-                        <span style="float: right;">
-                            <q-btn icon="close" v-close-popup flat round size="sm"></q-btn>
-                        </span>
-                        <div class="text-body2 text-bold">VALIDAR FICHA</div>
-                        <div class="text-caption" v-if="fichaAValidar">
-                            {{ fichaAValidar.codigoAnexo2 }} - Correlativo: {{ fichaAValidar.correlativo }}
+                <q-card class="validar-dialog">
+                    <q-card-section class="validar-dialog__header bg-header-dialog">
+                        <div class="validar-dialog__title-block">
+                            <div class="validar-dialog__title text-body2 text-bold">VALIDAR FICHA</div>
+                            <div class="validar-dialog__subtitle text-caption" v-if="fichaAValidar">
+                                {{ fichaAValidar.codigoAnexo2 }} - Correlativo: {{ fichaAValidar.correlativo }}
+                            </div>
                         </div>
+                        <q-btn icon="close" class="validar-dialog__close" v-close-popup flat round dense size="sm"></q-btn>
                     </q-card-section>
 
-                    <q-card-section>
-                        <div v-if="loadingCargarPersonal" class="text-center q-pa-lg">
+                    <q-card-section class="validar-dialog__body">
+                        <div v-if="loadingCargarPersonal" class="validar-loading text-center q-pa-lg">
                             <q-spinner size="40px" color="primary" />
                             <div class="q-mt-sm text-grey">Cargando personal...</div>
                         </div>
@@ -711,7 +711,7 @@
                             row-key="idPersonal" 
                             table-header-class="bg-inabif text-bold" 
                             dense flat bordered
-                            class="tabla-validar-ficha"
+                            class="tabla-validar-ficha validar-table"
                             :rows-per-page-options="[0]"
                             hide-bottom>
                             
@@ -725,12 +725,12 @@
                                 <q-td :props="props">
                                     <!-- Ya validado -->
                                     <div v-if="props.row.validado" class="row justify-center items-center">
-                                        <q-icon name="verified_user" color="positive" size="28px">
+                                        <q-icon name="verified_user" color="positive" class="validar-status-icon">
                                             <q-tooltip>Validado</q-tooltip>
                                         </q-icon>
                                     </div>
                                     <!-- Mostrar input -->
-                                    <div v-else-if="mostrarInputValidar[props.row.idPersonal]" class="row q-gutter-xs items-center justify-center">
+                                    <div v-else-if="mostrarInputValidar[props.row.idPersonal]" class="validar-input-row row q-gutter-xs items-center justify-center">
                                         <q-input 
                                             v-model="props.row.contrasena" 
                                             type="password" 
@@ -744,6 +744,7 @@
                                                     round dense flat
                                                     icon="check"
                                                     color="positive"
+                                                    class="btn-validar-inline"
                                                     :loading="props.row.validando"
                                                     :disable="!props.row.contrasena"
                                                     @click="validarPersonal(props.row)" />
@@ -753,6 +754,7 @@
                                             round dense flat
                                             icon="close"
                                             color="grey"
+                                            class="btn-validar-inline"
                                             size="sm"
                                             @click="$set(mostrarInputValidar, props.row.idPersonal, false)" />
                                     </div>
@@ -763,6 +765,7 @@
                                             color="inabif"
                                             text-color="white"
                                             icon="verified_user"
+                                            class="btn-validar-icon"
                                             size="sm"
                                             @click="$set(mostrarInputValidar, props.row.idPersonal, true)">
                                             <q-tooltip>Validar personal</q-tooltip>
@@ -779,11 +782,11 @@
                         </q-table>
                     </q-card-section>
 
-                    <q-card-actions align="right" class="q-pa-md">
-                        <q-btn label="Cerrar" v-close-popup flat />
+                    <q-card-actions align="right" class="validar-dialog__actions">
+                        <q-btn label="Cerrar" class="validar-btn validar-btn--close" v-close-popup flat />
                         <q-btn 
                             label="Dar Conformidad" 
-                            class="btn-inabif" 
+                            class="btn-inabif validar-btn"
                             :loading="validandoConformidad"
                             :disable="!todosValidados"
                             @click="darConformidad" />
@@ -793,24 +796,33 @@
 
             <!-- DIALOGO GESTION DE AUDIOS -->
             <q-dialog v-model="dialogAudios" persistent @hide="limpiarAudioDialog">
-                <q-card style="width: 700px; max-width: 90vw">
-                    <q-card-section class="bg-header-dialog">
-                        <span style="float: right;">
-                            <q-btn icon="close" v-close-popup flat round size="sm"></q-btn>
-                        </span>
-                        <div class="text-body2 text-bold">GESTIÓN DE AUDIOS</div>
-                        <div class="text-caption" v-if="audioRow">
-                            {{ audioRow.codigoAnexo2 }} - Correlativo: {{ audioRow.correlativo }}
+                <q-card class="audio-dialog">
+                    <q-card-section class="audio-dialog__header bg-header-dialog">
+                        <div class="audio-dialog__title-block">
+                            <div class="audio-dialog__title text-body2 text-bold">GESTIÓN DE AUDIOS</div>
+                            <div class="audio-dialog__subtitle text-caption" v-if="audioRow">
+                                {{ audioRow.codigoAnexo2 }} - Correlativo: {{ audioRow.correlativo }}
+                            </div>
                         </div>
+                        <q-btn
+                            icon="close"
+                            class="audio-dialog__close"
+                            v-close-popup
+                            flat
+                            round
+                            dense
+                            size="sm"
+                        />
                     </q-card-section>
 
-                    <q-card-section>
+                    <q-card-section class="audio-dialog__body">
                         <!-- Zona de subida / reemplazo -->
-                        <div class="row q-col-gutter-sm items-center q-mb-md">
-                            <div class="col">
+                        <div class="audio-upload-row row q-col-gutter-sm items-center q-mb-md">
+                            <div class="col-12 col-sm">
                                 <q-file
                                     v-model="audioFile"
                                     label="Seleccionar audio"
+                                    class="audio-file-field"
                                     outlined
                                     dense
                                     accept="audio/*"
@@ -818,16 +830,16 @@
                                     :disable="loadingAudios"
                                 >
                                     <template v-slot:prepend>
-                                        <q-icon name="attach_file" />
+                                        <q-icon name="attach_file" class="audio-field-icon" />
                                     </template>
                                 </q-file>
                             </div>
-                            <div class="col-auto">
+                            <div class="col-12 col-sm-auto">
                                 <q-btn
                                     v-if="!audioReemplazando"
                                     label="Subir"
                                     icon="upload"
-                                    class="btn-inabif"
+                                    class="audio-btn btn-inabif"
                                     size="sm"
                                     :loading="loadingAudios"
                                     :disable="!audioFile"
@@ -837,18 +849,19 @@
                                     v-else
                                     label="Reemplazar"
                                     icon="swap_horiz"
-                                    class="btn-inabif"
+                                    class="audio-btn btn-inabif"
                                     size="sm"
                                     :loading="loadingAudios"
                                     :disable="!audioFile"
                                     @click="subirAudio"
                                 />
                             </div>
-                            <div class="col-auto" v-if="audioReemplazando">
+                            <div class="col-12 col-sm-auto" v-if="audioReemplazando">
                                 <q-btn
                                     label="Cancelar"
                                     icon="close"
-                                    flat
+                                    class="audio-btn audio-btn--cancel"
+                                    outline
                                     size="sm"
                                     color="grey"
                                     @click="cancelarReemplazo"
@@ -856,12 +869,13 @@
                             </div>
                         </div>
 
-                        <div v-if="audioReemplazando" class="text-caption text-grey q-mb-sm">
+                        <div v-if="audioReemplazando" class="audio-replacing-banner text-caption q-mb-sm">
                             Reemplazando: <strong>{{ audioReemplazando.nombreArchivo }}</strong>
                         </div>
 
                         <!-- Tabla de audios -->
                         <q-table
+                            class="audio-table"
                             :data="audiosList"
                             :columns="columnasAudios"
                             row-key="idAudio"
@@ -876,17 +890,51 @@
                                 </q-td>
                             </template>
 
+                            <template v-slot:body-cell-nombreArchivo="props">
+                                <q-td :props="props">
+                                    <div class="audio-file-name" :title="props.row.nombreArchivo">
+                                        {{ props.row.nombreArchivo }}
+                                    </div>
+                                </q-td>
+                            </template>
+
                             <template v-slot:body-cell-acciones="props">
                                 <q-td :props="props">
-                                    <q-btn icon="play_circle" color="primary" flat round size="sm" @click="reproducirAudio(props.row)">
-                                        <q-tooltip>Reproducir</q-tooltip>
-                                    </q-btn>
-                                    <q-btn icon="edit" color="warning" flat round size="sm" @click="iniciarReemplazo(props.row)">
-                                        <q-tooltip>Reemplazar</q-tooltip>
-                                    </q-btn>
-                                    <q-btn icon="delete" color="negative" flat round size="sm" @click="eliminarAudio(props.row)">
-                                        <q-tooltip>Eliminar</q-tooltip>
-                                    </q-btn>
+                                    <div class="audio-actions-row">
+                                        <q-btn
+                                            icon="play_circle"
+                                            color="primary"
+                                            class="audio-action-btn audio-action-btn--play"
+                                            flat
+                                            round
+                                            size="sm"
+                                            @click="reproducirAudio(props.row)"
+                                        >
+                                            <q-tooltip>Reproducir</q-tooltip>
+                                        </q-btn>
+                                        <q-btn
+                                            icon="edit"
+                                            color="warning"
+                                            class="audio-action-btn audio-action-btn--edit"
+                                            flat
+                                            round
+                                            size="sm"
+                                            @click="iniciarReemplazo(props.row)"
+                                        >
+                                            <q-tooltip>Reemplazar</q-tooltip>
+                                        </q-btn>
+                                        <q-btn
+                                            icon="delete"
+                                            color="negative"
+                                            class="audio-action-btn audio-action-btn--delete"
+                                            flat
+                                            round
+                                            size="sm"
+                                            @click="eliminarAudio(props.row)"
+                                        >
+                                            <q-tooltip>Eliminar</q-tooltip>
+                                        </q-btn>
+                                    </div>
                                 </q-td>
                             </template>
 
@@ -899,12 +947,12 @@
 
                         <!-- Reproductor -->
                         <div v-if="audioBlobUrl" class="q-mt-md">
-                            <audio controls :src="audioBlobUrl" type="audio/mpeg" style="width:100%; height: 40px; border-radius: 6px;"></audio>
+                            <audio controls :src="audioBlobUrl" type="audio/mpeg" class="audio-player-inline"></audio>
                         </div>
                     </q-card-section>
 
-                    <q-card-actions align="right" class="q-pa-md">
-                        <q-btn label="Cerrar" v-close-popup flat />
+                    <q-card-actions align="right" class="audio-dialog__actions">
+                        <q-btn label="Cerrar" class="audio-btn--close" v-close-popup flat />
                     </q-card-actions>
                 </q-card>
             </q-dialog>
@@ -1557,6 +1605,342 @@
     justify-content: flex-end;
 }
 
+/* Dialogo Gestion de Audios */
+.audio-dialog {
+    width: 820px;
+    max-width: 90vw;
+    max-height: 86vh;
+    overflow: hidden;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+}
+
+.audio-dialog__header {
+    min-height: 48px;
+    height: auto;
+    padding: 10px 14px 8px 16px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    column-gap: 12px;
+}
+
+.audio-dialog__title-block {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.audio-dialog__title,
+:deep(.audio-delete-dialog .q-dialog__title) {
+    color: #000;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.audio-dialog__subtitle {
+    margin-top: 2px;
+    color: #263238;
+    line-height: 1.25;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.audio-dialog__close {
+    flex: 0 0 auto;
+    color: #1f2d3d;
+}
+
+.audio-dialog__body {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 14px 16px;
+    flex: 1 1 auto;
+}
+
+.audio-dialog__actions {
+    padding: 10px 16px 14px;
+    border-top: 1px solid #e5edf6;
+}
+
+.audio-upload-row {
+    min-width: 0;
+}
+
+.audio-file-field,
+.audio-upload-row .col-12,
+.audio-upload-row .col-sm,
+.audio-upload-row .col-sm-auto {
+    min-width: 0;
+}
+
+.audio-field-icon {
+    color: #455a64;
+    font-size: 20px;
+}
+
+.audio-btn {
+    min-width: 112px;
+    height: 34px;
+}
+
+.audio-btn--cancel {
+    color: #546e7a;
+}
+
+.audio-btn--close {
+    color: #263238;
+}
+
+.audio-replacing-banner {
+    padding: 8px 10px;
+    border: 1px solid #d7e3f1;
+    border-left: 4px solid #1976d2;
+    border-radius: 4px;
+    background: #f4f8fd;
+    color: #263238;
+    overflow-wrap: anywhere;
+}
+
+.audio-table {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+}
+
+.audio-table :deep(.q-table__middle),
+.audio-table :deep(.q-table__container),
+.audio-table :deep(table) {
+    width: 100%;
+    max-width: 100%;
+}
+
+.audio-table :deep(th),
+.audio-table :deep(td) {
+    vertical-align: middle;
+}
+
+.audio-table :deep(th:nth-child(1)),
+.audio-table :deep(td:nth-child(1)) {
+    width: 58px;
+    min-width: 58px;
+    max-width: 58px;
+    text-align: center;
+}
+
+.audio-table :deep(th:nth-child(2)),
+.audio-table :deep(td:nth-child(2)) {
+    min-width: 0;
+}
+
+.audio-table :deep(th:nth-child(3)),
+.audio-table :deep(td:nth-child(3)) {
+    width: 138px;
+    min-width: 138px;
+    max-width: 138px;
+    text-align: center;
+}
+
+.audio-file-name {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.audio-actions-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    column-gap: 6px;
+    min-width: 0;
+}
+
+.audio-action-btn {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    min-height: 30px;
+}
+
+.audio-action-btn :deep(.q-btn__wrapper),
+.audio-action-btn :deep(.q-btn__content) {
+    width: 30px;
+    height: 30px;
+    min-height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.audio-action-btn :deep(.q-icon) {
+    font-size: 20px;
+}
+
+.audio-action-btn--edit {
+    color: #f2a900 !important;
+}
+
+.audio-player-inline {
+    width: 100%;
+    max-width: 100%;
+    height: 40px;
+    border-radius: 6px;
+    margin-top: 8px;
+    display: block;
+}
+
+:deep(.audio-delete-dialog) {
+    width: 420px;
+    max-width: 92vw;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+:deep(.audio-delete-dialog .q-dialog__title) {
+    background-color: #dee8f5;
+    height: 40px;
+    padding: 10px 16px 0;
+}
+
+:deep(.audio-delete-dialog .q-card__section--main) {
+    padding: 16px;
+    color: #1f2d3d;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+:deep(.audio-delete-dialog .q-card__actions) {
+    padding: 10px 16px 14px;
+    column-gap: 8px;
+}
+
+:deep(.audio-delete-dialog .q-card__actions .q-btn) {
+    min-width: 112px;
+    height: 36px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+@media (max-width: 599px) {
+    .audio-dialog {
+        width: calc(100vw - 28px);
+        max-width: calc(100vw - 28px);
+        max-height: 82vh;
+        margin: 14px;
+    }
+
+    .audio-dialog__header {
+        padding: 10px 12px 8px;
+        align-items: flex-start;
+    }
+
+    .audio-dialog__body {
+        padding: 12px;
+    }
+
+    .audio-dialog__actions {
+        padding: 10px 12px 12px;
+    }
+
+    .audio-upload-row {
+        row-gap: 8px;
+    }
+
+    .audio-upload-row .col-12,
+    .audio-upload-row .col-sm,
+    .audio-upload-row .col-sm-auto {
+        flex: 0 0 100%;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .audio-file-field,
+    .audio-file-field :deep(.q-field__control),
+    .audio-file-field :deep(.q-field__native),
+    .audio-file-field :deep(.q-field__input) {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .audio-btn,
+    .audio-btn--close {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .audio-table {
+        font-size: 11px;
+    }
+
+    .audio-table :deep(table) {
+        table-layout: fixed;
+    }
+
+    .audio-table :deep(th),
+    .audio-table :deep(td) {
+        padding-left: 6px;
+        padding-right: 6px;
+    }
+
+    .audio-table :deep(th:nth-child(1)),
+    .audio-table :deep(td:nth-child(1)) {
+        width: 44px;
+        min-width: 44px;
+        max-width: 44px;
+    }
+
+    .audio-table :deep(th:nth-child(3)),
+    .audio-table :deep(td:nth-child(3)) {
+        width: 112px;
+        min-width: 112px;
+        max-width: 112px;
+    }
+
+    .audio-actions-row {
+        column-gap: 4px;
+    }
+
+    .audio-action-btn,
+    .audio-action-btn :deep(.q-btn__wrapper),
+    .audio-action-btn :deep(.q-btn__content) {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        min-height: 28px;
+    }
+
+    .audio-action-btn :deep(.q-icon) {
+        font-size: 19px;
+    }
+
+    .audio-player-inline {
+        height: 38px;
+    }
+
+    :deep(.audio-delete-dialog) {
+        width: calc(100vw - 32px);
+        max-width: calc(100vw - 32px);
+    }
+
+    :deep(.audio-delete-dialog .q-card__actions) {
+        justify-content: stretch;
+    }
+
+    :deep(.audio-delete-dialog .q-card__actions .q-btn) {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+}
+
 /* Audio player estilizado */
 audio {
     width: 100%;
@@ -1687,62 +2071,246 @@ audio {
    ESTILOS TABLA VALIDAR FICHA
    ================================ */
 
-.tabla-validar-ficha .q-table {
-    table-layout: fixed;
-    width: 100%;
+.validar-dialog {
+    width: 760px;
+    max-width: 90vw;
+    max-height: 86vh;
+    overflow: hidden;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
 }
 
-.tabla-validar-ficha .q-table th {
+.validar-dialog__header {
+    min-height: 48px;
+    height: auto;
+    padding: 10px 14px 8px 16px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    column-gap: 12px;
+}
+
+.validar-dialog__title-block {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.validar-dialog__title {
+    color: #000;
+    line-height: 1.25;
+}
+
+.validar-dialog__subtitle {
+    margin-top: 2px;
+    color: #263238;
+    line-height: 1.25;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.validar-dialog__close {
+    flex: 0 0 auto;
+    color: #1f2d3d;
+}
+
+.validar-dialog__body {
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 14px 16px;
+    flex: 1 1 auto;
+}
+
+.validar-dialog__actions {
+    padding: 10px 16px 14px;
+    border-top: 1px solid #e5edf6;
+}
+
+.validar-btn {
+    min-width: 132px;
+}
+
+.validar-btn--close {
+    color: #263238;
+}
+
+.validar-table {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.tabla-validar-ficha :deep(.q-table__container),
+.tabla-validar-ficha :deep(.q-table__middle),
+.tabla-validar-ficha :deep(table) {
+    width: 100%;
+    max-width: 100%;
+}
+
+.tabla-validar-ficha :deep(table) {
+    table-layout: fixed;
+}
+
+.tabla-validar-ficha :deep(th) {
     background: linear-gradient(135deg, #BF0411 0%, #d63031 100%);
     color: white;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.03em;
     font-size: 0.8rem;
-    padding: 12px 16px;
+    padding: 11px 12px;
 }
 
-.tabla-validar-ficha .q-table td {
-    padding: 12px 16px;
+.tabla-validar-ficha :deep(td) {
+    padding: 10px 12px;
     vertical-align: middle;
 }
 
-.tabla-validar-ficha .q-table tbody tr:nth-child(even) {
+.tabla-validar-ficha :deep(tbody tr:nth-child(even)) {
     background-color: #fafbfc;
 }
 
-.tabla-validar-ficha .q-table tbody tr:hover {
+.tabla-validar-ficha :deep(tbody tr:hover) {
     background-color: #f0f4f8;
 }
 
-/* Input de validación estilizado */
-.input-validar .q-field__control {
+.tabla-validar-ficha :deep(th:nth-child(1)),
+.tabla-validar-ficha :deep(td:nth-child(1)) {
+    width: 52px;
+    min-width: 52px;
+    max-width: 52px;
+    text-align: center;
+}
+
+.tabla-validar-ficha :deep(th:nth-child(2)),
+.tabla-validar-ficha :deep(td:nth-child(2)) {
+    min-width: 0;
+}
+
+.tabla-validar-ficha :deep(th:nth-child(3)),
+.tabla-validar-ficha :deep(td:nth-child(3)) {
+    width: 250px;
+    min-width: 250px;
+    max-width: 250px;
+    text-align: center;
+}
+
+.validar-status-icon {
+    font-size: 28px;
+}
+
+.validar-input-row {
+    min-width: 0;
+    flex-wrap: nowrap;
+}
+
+.input-validar {
+    min-width: 0;
+    width: 100%;
+    max-width: 210px;
+}
+
+.input-validar :deep(.q-field__control) {
     border-radius: 20px;
     transition: box-shadow 0.2s ease, border-color 0.2s ease;
     padding-right: 4px;
 }
 
-.input-validar .q-field__control:hover {
+.input-validar :deep(.q-field__control:hover) {
     border-color: #BF0411;
 }
 
-.input-validar.q-field--focused .q-field__control {
+.input-validar.q-field--focused :deep(.q-field__control) {
     border-color: #BF0411;
     box-shadow: 0 0 0 3px rgba(191, 4, 17, 0.12);
 }
 
-.input-validar input {
+.input-validar :deep(input) {
     font-size: 0.9rem;
 }
 
-/* Botón circular de validar */
-.btn-validar-icon {
+.btn-validar-icon,
+.btn-validar-inline {
     width: 32px;
     height: 32px;
     min-width: 32px;
     min-height: 32px;
     border-radius: 50%;
     padding: 0;
+}
+
+@media (max-width: 599px) {
+    .validar-dialog {
+        width: calc(100vw - 28px);
+        max-width: calc(100vw - 28px);
+        max-height: 82vh;
+        margin: 14px;
+    }
+
+    .validar-dialog__header {
+        padding: 10px 12px 8px;
+    }
+
+    .validar-dialog__body {
+        padding: 12px;
+    }
+
+    .validar-dialog__actions {
+        padding: 10px 12px 12px;
+        display: flex;
+        justify-content: flex-end;
+        column-gap: 8px;
+    }
+
+    .validar-btn {
+        min-width: 0;
+    }
+
+    .tabla-validar-ficha {
+        font-size: 11px;
+    }
+
+    .tabla-validar-ficha :deep(th),
+    .tabla-validar-ficha :deep(td) {
+        padding-left: 6px;
+        padding-right: 6px;
+    }
+
+    .tabla-validar-ficha :deep(th:nth-child(1)),
+    .tabla-validar-ficha :deep(td:nth-child(1)) {
+        width: 42px;
+        min-width: 42px;
+        max-width: 42px;
+    }
+
+    .tabla-validar-ficha :deep(th:nth-child(3)),
+    .tabla-validar-ficha :deep(td:nth-child(3)) {
+        width: 136px;
+        min-width: 136px;
+        max-width: 136px;
+    }
+
+    .validar-status-icon {
+        font-size: 24px;
+    }
+
+    .validar-input-row {
+        column-gap: 4px;
+    }
+
+    .input-validar {
+        max-width: 100%;
+    }
+
+    .btn-validar-icon,
+    .btn-validar-inline {
+        width: 28px;
+        height: 28px;
+        min-width: 28px;
+        min-height: 28px;
+    }
 }
 </style>
 
@@ -3176,11 +3744,25 @@ export default {
 
         async eliminarAudio(row) {
             this.$q.dialog({
-                title: "Confirmar eliminación",
+                title: "ELIMINAR AUDIO",
                 message: `¿Eliminar el audio <strong>${row.nombreArchivo}</strong>?`,
                 html: true,
-                cancel: true,
-                persistent: true
+                persistent: true,
+                class: "audio-delete-dialog dialog-mensaje",
+                focus: "cancel",
+                ok: {
+                    label: "Eliminar",
+                    icon: "delete",
+                    color: "negative",
+                    unelevated: true
+                },
+                cancel: {
+                    label: "Cancelar",
+                    icon: "close",
+                    color: "grey-5",
+                    textColor: "dark",
+                    unelevated: true
+                }
             }).onOk(async () => {
                 this.loadingAudios = true;
                 try {
