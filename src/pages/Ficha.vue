@@ -222,9 +222,9 @@
                                     expand-separator header-class="bg-red-5 text-white q-mt-sm header-seccion"
                                     expand-icon-class="text-white">
 
-                                    <q-card-section class="q-pa-md">
-                                        <div class="tabla-scroll-container">
-                                            <q-markup-table bordered dense class="rounded-borders datos-generales-tabla">
+                                    <q-card-section class="q-pa-md datos-generales-section">
+                                        <div class="tabla-scroll-container datos-generales-scroll">
+                                            <q-markup-table bordered :dense="$q.screen.gt.xs" class="rounded-borders datos-generales-tabla">
                                             <tbody>
 
                                                 <tr v-if="mostrarModalidad">
@@ -271,7 +271,7 @@
                                                 <tr>
                                                     <td class="text-left text-bold">
                                                         <q-icon name="place" class="q-mr-sm" />
-                                                        DEPARTAMENTO / PROVINCIA / DISTRITO
+                                                        <span class="u-wrap">DEPARTAMENTO / PROVINCIA / DISTRITO</span>
                                                     </td>
                                                     <td class="text-dark">{{ form.departamento }} / {{ form.provincia }}
                                                         / {{
@@ -309,7 +309,7 @@
                                                         SUPERVISADO (OS)
                                                     </td>
                                                     <td>
-                                                        <div class="row q-col-gutter-sm items-center">
+                                                        <div class="row q-col-gutter-sm items-center dg-supervisados-row">
                                                             <div class="col">
                                                                 <q-select v-model="form.idsSupervisados"
                                                                     :options="trabajadoresCentro" option-label="nombre"
@@ -930,13 +930,50 @@
 }
 
 .tabla-scroll-container {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+}
+
+.datos-generales-section {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+}
+
+.datos-generales-scroll {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
 }
 
 .tabla-scroll-container .q-markup-table {
     width: 100%;
     min-width: 500px;
+}
+
+.datos-generales-tabla {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.u-wrap {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+}
+
+.u-ellipsis {
+    display: block;
+    max-width: 100%;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .ficha-header {
@@ -1289,10 +1326,43 @@
         min-width: 0;
     }
 
+    .datos-generales-scroll {
+        overflow-x: hidden;
+        margin: 0;
+        padding: 0;
+    }
+
+    .datos-generales-scroll :deep(.q-markup-table),
+    .datos-generales-scroll :deep(.q-markup-table table),
+    .datos-generales-scroll :deep(.q-markup-table__wrapper) {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        margin: 0 !important;
+        table-layout: auto !important;
+        overflow-x: visible !important;
+    }
+
+    .tabla-scroll-container,
+    .datos-generales-tabla,
+    .datos-generales-tabla tbody,
+    .datos-generales-tabla tr,
+    .datos-generales-tabla td {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
     .datos-generales-tabla tbody tr {
         display: block;
         border-bottom: 1px solid #e6ecf2;
         padding: 8px 0;
+    }
+
+    .datos-generales-tabla tbody {
+        display: block;
+        width: 100%;
     }
 
     .datos-generales-tabla tbody td {
@@ -1300,11 +1370,14 @@
         width: 100%;
         padding: 8px 10px !important;
         white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
         text-align: left;
     }
 
     .datos-generales-tabla td:first-child {
-        min-width: 0;
+        min-width: 0 !important;
+        width: 100% !important;
         font-weight: 700;
         color: #34495e;
         padding-bottom: 4px !important;
@@ -1313,6 +1386,74 @@
     .datos-generales-tabla td:last-child {
         padding-left: 10px !important;
         padding-top: 2px !important;
+    }
+
+    .datos-generales-tabla :deep(.q-field),
+    .datos-generales-tabla :deep(.q-input),
+    .datos-generales-tabla :deep(.q-select) {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    .datos-generales-tabla :deep(.q-field__control),
+    .datos-generales-tabla :deep(.q-input .q-field__control),
+    .datos-generales-tabla :deep(.q-select .q-field__control) {
+        min-height: 40px !important;
+        height: auto !important;
+    }
+
+    .datos-generales-tabla :deep(tr),
+    .datos-generales-tabla :deep(td) {
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+    }
+
+    .datos-generales-tabla :deep(.q-field__native),
+    .datos-generales-tabla :deep(.q-field__input),
+    .datos-generales-tabla :deep(.q-chip) {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .datos-generales-tabla :deep(.q-chip) {
+        max-width: 100%;
+    }
+
+    .datos-generales-tabla :deep(.q-field__native),
+    .datos-generales-tabla :deep(.q-field__input),
+    .datos-generales-tabla :deep(.q-field__marginal),
+    .datos-generales-tabla :deep(.q-field__append),
+    .datos-generales-tabla :deep(.q-field__prepend),
+    .datos-generales-tabla :deep(.q-chip__content) {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .datos-generales-tabla :deep(.q-chip) {
+        height: auto;
+        min-height: 24px;
+    }
+
+    .datos-generales-tabla :deep(.q-chip__content) {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .dg-supervisados-row {
+        flex-direction: column;
+        align-items: stretch;
+        row-gap: 8px;
+    }
+
+    .dg-supervisados-row > .col,
+    .dg-supervisados-row > .col-auto {
+        width: 100%;
+        max-width: 100%;
+        flex: 0 0 100%;
     }
     
     .seccion-expansion .q-expansion-item__content {
@@ -1343,7 +1484,12 @@
 
 .q-input .q-field__control, .q-select .q-field__control {
     min-height: 40px;
-    height: 40px;
+}
+
+@media (min-width: 600px) {
+    .q-input .q-field__control, .q-select .q-field__control {
+        height: 40px;
+    }
 }
 
 .q-input input, .q-select .q-field__input {
