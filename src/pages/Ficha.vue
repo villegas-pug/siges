@@ -515,7 +515,7 @@
                                                             <template v-if="esVisualizacion && pregunta.respuesta">
                                                                 <span class="ficha-valor">{{ pregunta.respuesta }}</span>
                                                             </template>
-                                                            <q-option-group v-else
+                                                            <q-option-group v-else class="ficha-radio-group"
                                                                 :value="pregunta.respuesta"
                                                                 @input="val => $set(pregunta, 'respuesta', val)"
                                                                 :options="pregunta.opciones" type="radio" inline
@@ -1165,7 +1165,8 @@
 }
 
 .datos-generales-tabla .q-icon {
-    color: #BF0411;
+    color: #374151;
+    font-size: 18px;
     margin-right: 8px;
 }
 
@@ -1287,6 +1288,13 @@
     color: #d63031;
 }
 
+.ficha-radio-group {
+    display: flex;
+    justify-content: center;
+    column-gap: 20px;
+    row-gap: 8px;
+}
+
 @media (max-width: 599px) {
     .ficha-label {
         font-size: 0.9rem;
@@ -1309,6 +1317,11 @@
     
     .ficha-input .q-field__control {
         min-height: 40px;
+    }
+
+    .ficha-radio-group {
+        justify-content: center;
+        column-gap: 16px;
     }
     
     .ficha-dialog {
