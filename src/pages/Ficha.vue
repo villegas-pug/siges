@@ -296,6 +296,8 @@
                                                         <q-select v-model="form.idRespSupervision"
                                                             :options="responsables" option-label="nombre"
                                                             option-value="idPersonal" emit-value map-options outlined
+                                                            clearable
+                                                            :display-value="getResponsableSupervisionDisplay()"
                                                             dense :disable="esVisualizacion" style="border: none;" />
                                                     </td>
                                                 </tr>
@@ -2668,6 +2670,22 @@ export default {
         puedeEditar(row) {
             return row && row.estado !== 2;
         },
+        normalizarIdResponsable(value) {
+            if (value === null || value === undefined) return null;
+            const texto = String(value).trim();
+            if (!texto || texto === "0") return null;
+            const numero = Number(texto);
+            if (!Number.isFinite(numero) || numero <= 0) return null;
+            return numero;
+        },
+        getResponsableSupervisionDisplay() {
+            const id = this.normalizarIdResponsable(this.form.idRespSupervision);
+            if (id === null) return "";
+            const responsable = this.responsables.find(
+                r => this.normalizarIdResponsable(r.idPersonal) === id
+            );
+            return responsable ? responsable.nombre : "";
+        },
         esFichaSuscrita(row) {
             return !!row && Number(row.estado) === 2;
         },
@@ -2716,7 +2734,7 @@ export default {
                 await this.precargarTrabajadoresCentro();
                 this.form.respDirector = row.respDirector;
                 this.form.idDirector = row.idDirector;
-                this.form.idRespSupervision = row.idRespSupervision;
+                this.form.idRespSupervision = this.normalizarIdResponsable(row.idRespSupervision);
                 this.form.idsSupervisados = this.parseIdSupervisado(row.idSupervisado);
 
                 this.form.tipoCentro = row.tipoCentro;
@@ -2762,7 +2780,7 @@ export default {
                 this.form.nombreCentro = row.nombreCentro;
                 await this.precargarTrabajadoresCentro();
                 this.form.respDirector = row.respDirector;
-                this.form.idRespSupervision = row.idRespSupervision;
+                this.form.idRespSupervision = this.normalizarIdResponsable(row.idRespSupervision);
                 this.form.idsSupervisados = this.parseIdSupervisado(row.idSupervisado);
                 this.form.tipoCentro = row.tipoCentro;
 
@@ -2824,7 +2842,7 @@ export default {
                 this.form.audioUrl = data.audioUrl;
                 this.form.respDirector = data.respDirector;
                 this.form.tipoCentro = data.tipoCentro;
-                this.form.idRespSupervision = data.idRespSupervision;
+                this.form.idRespSupervision = this.normalizarIdResponsable(data.idRespSupervision);
                 this.form.idsSupervisados = this.parseIdSupervisado(data.idSupervisado);
 
                 if (data.idSupervisado && data.nombreSupervisado) {
@@ -3054,6 +3072,8 @@ export default {
             this.form.nombreAnexo = anexo?.nombreAnexo || ''
             this.form.codigoAnexo2 = anexo?.codigoAnexo2 || ''
             this.form.fechaRegistro = new Date().toISOString().substring(0, 10)
+            this.form.idRespSupervision = null
+            this.form.respDirector = null
             this.form.idsSupervisados = []
 
             // Precargar todo el personal del centro
@@ -3493,7 +3513,7 @@ export default {
                     tipo: this.fichaTipo,
                     fechaAplicacion: new Date().toISOString().split('T')[0],
                     fechaRegistro: this.form.fechaRegistro,
-                    idRespSupervision: this.form.idRespSupervision,
+                    idRespSupervision: this.normalizarIdResponsable(this.form.idRespSupervision),
                     idDirector: this.form.idDirector,
                     idSupervisado: this.form.idsSupervisados.join(','),
                     respuestas,
@@ -3872,7 +3892,13 @@ export default {
                     }
                 )
 
-                this.responsables = res.data
+                const responsables = Array.isArray(res.data) ? res.data : []
+                this.responsables = responsables
+                    .map(r => ({
+                        ...r,
+                        idPersonal: this.normalizarIdResponsable(r.idPersonal)
+                    }))
+                    .filter(r => r.idPersonal !== null)
 
             } catch (error) {
 
