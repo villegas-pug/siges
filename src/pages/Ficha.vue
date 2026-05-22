@@ -840,7 +840,6 @@
                                     class="audio-file-field"
                                     outlined
                                     dense
-                                    accept="audio/*"
                                     clearable
                                     :disable="loadingAudios"
                                 >
