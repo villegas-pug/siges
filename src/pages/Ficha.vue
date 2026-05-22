@@ -72,7 +72,7 @@
             <div class="row">
                 <div class="col-12 q-gutter-sm text-right q-mt-sm q-mb-md">
                     <q-btn label="NUEVO" icon="add" class="btn-inabif" size="sm" @click="abrirDialog"
-                        :disable="!puedeCrearNuevo" />
+                        :disable="!puedeIntentarNuevo" />
                     <q-btn label="EXCEL" icon="download" color="green" class="btn-seccion-acciones" size="sm" />
                 </div>
             </div>
@@ -3006,18 +3006,18 @@ export default {
             this.fichaPeriodo = this.anioSeleccionado;
             this.fichaTipo = this.tipoFicha;
             this.modoSupervision = null;
-            if (!this.anioSeleccionado) {
+            if (this.anioSeleccionado === null || this.anioSeleccionado === undefined || this.anioSeleccionado === '') {
                 this.$q.notify({
                     type: 'warning',
-                    message: 'Debe seleccionar: PERIODO'
+                    message: 'Debe seleccionar un PERIODO válido (distinto de TODOS)'
                 })
                 return
             }
 
-            if (!this.tipoFicha) {
+            if (this.tipoFicha === null || this.tipoFicha === undefined || this.tipoFicha === '') {
                 this.$q.notify({
                     type: 'warning',
-                    message: 'Debe seleccionar: TIPO'
+                    message: 'Debe seleccionar un TIPO válido (distinto de TODOS)'
                 })
                 return
             }
@@ -4519,6 +4519,17 @@ export default {
                 !!this.servicioSeleccionado &&
                 !!this.centroSeleccionado &&
                 !!this.anexoSeleccionado
+        },
+        puedeIntentarNuevo() {
+            return !!this.unidadSeleccionada &&
+                !!this.servicioSeleccionado &&
+                !!this.centroSeleccionado &&
+                !!this.anexoSeleccionado
+        },
+        periodoYTipoValidos() {
+            const periodoValido = this.anioSeleccionado !== null && this.anioSeleccionado !== undefined && this.anioSeleccionado !== ''
+            const tipoValido = this.tipoFicha !== null && this.tipoFicha !== undefined && this.tipoFicha !== ''
+            return periodoValido && tipoValido
         },
         tituloAnexo() {
 
