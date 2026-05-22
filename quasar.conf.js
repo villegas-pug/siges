@@ -55,10 +55,10 @@ module.exports = function (ctx) {
                 : 'http://172.19.0.44:4000/api/ms-punche',
 
                 // PROD
-                // API_URL_SIGESU: 'http://172.19.0.44:4000/api/ms-sigesu',
+                API_URL_SIGESU: 'http://172.19.0.44:4000/api/ms-sigesu',
                 
                 // DEV
-                API_URL_SIGESU: 'http://10.101.0.36:4000/api/ms-sigesu',
+                // API_URL_SIGESU: 'http://10.101.0.36:4000/api/ms-sigesu',
                 API_RUTA:'https://srvapp01.inabif.gob.pe:8443/SRH',
 
             }

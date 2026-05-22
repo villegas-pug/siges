@@ -146,9 +146,18 @@
                                 <q-btn-dropdown dropdown-icon="settings" class="q-mr-xs acciones" dense>
                                     <q-list style="min-width: 200px">
                                         <!-- Editar Evaluación -->
-                                        <q-item clickable v-close-popup @click="editarRegistro(scope.row)">
+                                        <q-item
+                                            :clickable="puedeEditar(scope.row)"
+                                            v-close-popup
+                                            @click="puedeEditar(scope.row) && editarRegistro(scope.row)"
+                                            :class="{ 'text-grey-6': !puedeEditar(scope.row) }"
+                                        >
                                             <q-item-section avatar>
-                                                <q-avatar icon="edit" color="red" text-color="white" />
+                                                <q-avatar
+                                                    icon="edit"
+                                                    :color="puedeEditar(scope.row) ? 'red' : 'grey'"
+                                                    text-color="white"
+                                                />
                                             </q-item-section>
                                             <q-item-section>Editar Evaluación</q-item-section>
                                         </q-item>
@@ -2651,6 +2660,10 @@ export default {
     },
     methods: {
 
+        puedeEditar(row) {
+            return row && row.estado !== 2;
+        },
+
         getOptionImage(pregunta, optOrIndex) {
             if (!pregunta || !pregunta.idPregunta || !pregunta.opciones) return null;
             let indexItem;
@@ -2667,6 +2680,7 @@ export default {
         },
 
         async editarRegistro(row) {
+            if (!this.puedeEditar(row)) return;
             this.modo = "editar";
             try {
                 // Llenamos el form con los datos de la fila seleccionada
