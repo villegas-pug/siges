@@ -803,10 +803,11 @@
                     </q-card-section>
 
                     <q-card-actions align="right" class="validar-dialog__actions">
-                        <q-btn label="Cerrar" class="validar-btn validar-btn--close" v-close-popup flat />
+                        <q-btn label="Cerrar" icon="close" size="sm" class="ficha-btn-cancelar validar-btn" v-close-popup />
                         <q-btn 
                             label="Dar Conformidad" 
                             icon="fact_check"
+                            size="sm"
                             class="btn-inabif validar-btn"
                             :loading="validandoConformidad"
                             :disable="!todosValidados || esFichaSuscrita(fichaAValidar)"
@@ -972,7 +973,7 @@
                     </q-card-section>
 
                     <q-card-actions align="right" class="audio-dialog__actions">
-                        <q-btn label="Cerrar" class="audio-btn--close" v-close-popup flat />
+                        <q-btn label="Cerrar" icon="close" size="sm" class="ficha-btn-cancelar audio-btn" v-close-popup />
                     </q-card-actions>
                 </q-card>
             </q-dialog>
