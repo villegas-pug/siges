@@ -71,6 +71,15 @@
 
             <div class="row">
                 <div class="col-12 q-gutter-sm text-right q-mt-sm q-mb-md">
+                    <q-btn
+                        label="RESETEAR FILTROS"
+                        color="grey-5"
+                        text-color="white"
+                        icon-right="restart_alt"
+                        class="btn-seccion-acciones"
+                        size="sm"
+                        @click="resetearFiltrosPrincipal"
+                    />
                     <q-btn label="NUEVO" icon="add" class="btn-inabif" size="sm" @click="abrirDialog"
                         :disable="!puedeIntentarNuevo" />
                     <q-btn label="EXCEL" icon="download" color="green" class="btn-seccion-acciones" size="sm" />
@@ -3154,6 +3163,23 @@ export default {
                 this.form.nombreCentro = null
             }
 
+        },
+        resetearFiltrosPrincipal() {
+            // Orden controlado para evitar estados intermedios inconsistentes por watchers
+            this.filtroTabla = "";
+
+            this.anioSeleccionado = null;
+            this.tipoFicha = null;
+
+            this.unidadSeleccionada = null;
+            this.servicioSeleccionado = null;
+            this.centroSeleccionado = null;
+            this.centroNombre = "";
+            this.anexoSeleccionado = null;
+
+            this.servicios = [];
+            this.centros = [];
+            this.anexos = [];
         },
         /* ========================================
            ABRIR DIALOG
