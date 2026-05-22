@@ -739,8 +739,13 @@
 
                             <template v-slot:body-cell-validar="props">
                                 <q-td :props="props">
+                                    <div v-if="esFichaSuscrita(fichaAValidar)" class="row justify-center items-center">
+                                        <q-icon name="verified" color="info" class="validar-status-icon">
+                                            <q-tooltip>Ficha validada</q-tooltip>
+                                        </q-icon>
+                                    </div>
                                     <!-- Ya validado -->
-                                    <div v-if="props.row.validado" class="row justify-center items-center">
+                                    <div v-else-if="props.row.validado" class="row justify-center items-center">
                                         <q-icon name="verified_user" color="positive" class="validar-status-icon">
                                             <q-tooltip>Validado</q-tooltip>
                                         </q-icon>
@@ -773,11 +778,6 @@
                                             class="btn-validar-inline"
                                             size="sm"
                                             @click="$set(mostrarInputValidar, props.row.idPersonal, false)" />
-                                    </div>
-                                    <div v-else-if="esFichaSuscrita(fichaAValidar)" class="row justify-center items-center">
-                                        <q-icon name="verified" color="info" class="validar-status-icon">
-                                            <q-tooltip>Ficha validada</q-tooltip>
-                                        </q-icon>
                                     </div>
                                     <!-- Botón para mostrar input -->
                                     <div v-else class="row justify-center items-center">
