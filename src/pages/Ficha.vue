@@ -506,9 +506,10 @@
                                                             </template>
                                                             <q-input v-else outlined dense
                                                                 :value="pregunta.respuesta"
-                                                                @input="val => $set(pregunta, 'respuesta', val)"
+                                                                @input="val => $set(pregunta, 'respuesta', pregunta.tipoDato1 === 'NUMBER' ? normalizarNumeroNoNegativo(val) : val)"
                                                                 :disable="esVisualizacion"
                                                                 :type="pregunta.tipoDato1 === 'NUMBER' ? 'number' : 'text'"
+                                                                :min="pregunta.tipoDato1 === 'NUMBER' ? 0 : null"
                                                                 :rules="validarPregunta(pregunta)" />
                                                         </div>
                                                     </div>
@@ -549,8 +550,11 @@
                                                             </template>
                                                             <template v-else>
                                                                 <q-input v-if="pregunta.tipoControl2 === 'text'" outlined dense
-                                                                    v-model="pregunta.respuesta2" :disable="esVisualizacion"
+                                                                    :value="pregunta.respuesta2"
+                                                                    @input="val => $set(pregunta, 'respuesta2', pregunta.tipoDato2 === 'NUMBER' ? normalizarNumeroNoNegativo(val) : val)"
+                                                                    :disable="esVisualizacion"
                                                                     :type="pregunta.tipoDato2 === 'NUMBER' ? 'number' : 'text'"
+                                                                    :min="pregunta.tipoDato2 === 'NUMBER' ? 0 : null"
                                                                     :rules="validarPregunta2(pregunta)" />
 
                                                                 <q-select v-if="pregunta.tipoControl2 === 'select'" outlined
@@ -4000,6 +4004,12 @@ export default {
             ])]
             this.dialogSupervisados = false
         },
+        normalizarNumeroNoNegativo(value) {
+            if (value === '' || value === null || value === undefined) return null;
+            const n = Number(value);
+            if (!Number.isFinite(n)) return value;
+            return n < 0 ? 0 : value;
+        },
         validarPregunta(pregunta) {
 
             const reglas = []
@@ -4010,6 +4020,7 @@ export default {
 
             if (pregunta.tipoDato1 === 'NUMBER') {
                 reglas.push(v => !v || !isNaN(v) || 'Debe ingresar un número')
+                reglas.push(v => v === null || v === '' || Number(v) >= 0 || 'No se permiten valores negativos')
             }
 
             if (pregunta.condicion && pregunta.condicion.tipo === 'RANGO') {
@@ -4040,6 +4051,7 @@ export default {
 
             if (pregunta.tipoDato2 === 'NUMBER') {
                 reglas.push(v => !v || !isNaN(v) || 'Debe ingresar un número')
+                reglas.push(v => v === null || v === '' || Number(v) >= 0 || 'No se permiten valores negativos')
             }
 
             return reglas
