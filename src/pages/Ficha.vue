@@ -3677,6 +3677,20 @@ export default {
                         }))
                 );
 
+                if (!this.modoEdicion) {
+                    const directorCentro = this.resolverDirectorCentro(this.centroSeleccionado);
+                    this.form.respDirector = directorCentro.respDirector;
+                    this.form.idDirector = directorCentro.idDirector;
+
+                    if (!this.form.idDirector) {
+                        this.$q.notify({
+                            type: "warning",
+                            message: "No se pudo vincular el idPersonal del centro al DIRECTOR/COORDINADOR"
+                        });
+                        return;
+                    }
+                }
+
                 const payload = {
                     idAnexo: this.form.idAnexo,
                     idCentro: this.form.idCentro,
