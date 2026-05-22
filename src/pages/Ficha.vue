@@ -3862,13 +3862,19 @@ export default {
             }
 
             try {
+                const idUnidadOrganica = this.obtenerIdUnidadOrganicaCentro()
+                if (!idUnidadOrganica) {
+                    update(() => {
+                        this.trabajadoresCentro = []
+                    })
+                    return
+                }
 
                 const res = await this.$axios.get(
                     process.env.API_URL_SIGESU + "/responsables-centro",
                     {
                         params: {
-                            nombreCentro: this.form.nombreCentro,
-                            nombrePersona: val
+                            idUnidadOrganica
                         }
                     }
                 )
@@ -3898,13 +3904,14 @@ export default {
             return []
         },
         async precargarTrabajadoresCentro() {
-            if (!this.form.nombreCentro) return
+            const idUnidadOrganica = this.obtenerIdUnidadOrganicaCentro()
+            if (!idUnidadOrganica) return
             try {
                 const res = await this.$axios.get(
                     process.env.API_URL_SIGESU + "/responsables-centro",
                     {
                         params: {
-                            nombreCentro: this.form.nombreCentro
+                            idUnidadOrganica
                         }
                     }
                 )
@@ -4202,15 +4209,20 @@ export default {
 
             let trabajadores = [];
             try {
+                const idUnidadOrganica = await this.obtenerIdUnidadOrganicaCentroDesdeFila(row);
+                if (!idUnidadOrganica) {
+                    this.$q.notify({ type: "warning", message: "No se pudo obtener el centro para cargar personal" });
+                } else {
                 const res = await this.$axios.get(
                     process.env.API_URL_SIGESU + "/responsables-centro",
-                    { params: { nombreCentro: row.nombreCentro } }
+                    { params: { idUnidadOrganica } }
                 );
                 const data = res.data?.data || res.data || [];
                 trabajadores = Array.isArray(data) ? data.map(t => ({
                     ...t,
                     idPersonal: String(t.idPersonal)
                 })) : [];
+                }
             } catch (error) {
                 console.error(error);
                 this.$q.notify({ type: "negative", message: "Error al cargar el personal del centro" });
@@ -4325,6 +4337,41 @@ export default {
             this.fichaAValidar = null;
             this.personalValidacion = [];
             this.validandoConformidad = false;
+        },
+
+        obtenerIdUnidadOrganicaCentro() {
+            return this.form.idCentro || this.centroSeleccionado?.idUnidadOrganica || null;
+        },
+
+        async obtenerIdUnidadOrganicaCentroDesdeFila(row) {
+            if (row?.idCentro) return row.idCentro;
+            if (this.form.idCentro) return this.form.idCentro;
+            if (this.centroSeleccionado?.idUnidadOrganica) return this.centroSeleccionado.idUnidadOrganica;
+            if (!row?.idServicio) return null;
+
+            try {
+                const res = await this.$axios.get(
+                    `${process.env.API_URL_SIGESU}/centros/listar`,
+                    {
+                        params: {
+                            idServicio: row.idServicio
+                        }
+                    }
+                );
+
+                const centros = res.data || [];
+                if (!Array.isArray(centros) || centros.length === 0) return null;
+
+                const centro = centros.find(c =>
+                    c.idUnidadOrganica === row.idCentro ||
+                    c.nombreUnidad === row.nombreCentro
+                );
+
+                return centro?.idUnidadOrganica || null;
+            } catch (error) {
+                console.error(error);
+                return null;
+            }
         }
 
     },
