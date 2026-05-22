@@ -850,6 +850,7 @@
                         <div class="audio-upload-row row q-col-gutter-sm items-center q-mb-md">
                             <div class="col-12 col-sm">
                                 <q-file
+                                    ref="audioFileInput"
                                     v-model="audioFile"
                                     label="Seleccionar audio"
                                     class="audio-file-field"
@@ -3999,7 +4000,18 @@ export default {
         iniciarReemplazo(row) {
             this.audioReemplazando = row;
             this.audioFile = null;
-            this.$q.notify({ type: "info", message: `Seleccione el nuevo archivo para reemplazar: ${row.nombreArchivo}` });
+            this.$nextTick(() => {
+                this.abrirSelectorAudio();
+            });
+        },
+        abrirSelectorAudio() {
+            const qFile = this.$refs.audioFileInput;
+            if (!qFile || !qFile.$el) return;
+
+            const input = qFile.$el.querySelector('input[type="file"]');
+            if (!input) return;
+
+            input.click();
         },
 
         cancelarReemplazo() {
