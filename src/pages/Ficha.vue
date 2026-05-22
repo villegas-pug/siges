@@ -2809,6 +2809,36 @@ export default {
             }
         },
 
+        eliminarRegistro(row) {
+            if (!row || !row.idAnexoCabecera) return;
+
+            this.$q.dialog({
+                title: "Confirmar",
+                message: "¿Desea anular la evaluación seleccionada?",
+                cancel: true,
+                persistent: true
+            }).onOk(async () => {
+                try {
+                    await this.$axios.patch(
+                        `${process.env.API_URL_SIGESU}/saveEstadoConformidadAnexoCabecera?idAnexoCabecera=${row.idAnexoCabecera}&estado=0`
+                    );
+
+                    this.$q.notify({
+                        type: "positive",
+                        message: "Evaluación anulada correctamente"
+                    });
+
+                    await this.cargarTablaAnexos();
+                } catch (error) {
+                    console.error(error);
+                    this.$q.notify({
+                        type: "negative",
+                        message: "Error al anular la evaluación"
+                    });
+                }
+            });
+        },
+
         async cargarRespuestas() {
             if (!this.form.idAnexoCabecera) return;
 
@@ -4554,10 +4584,11 @@ export default {
         },
 
         dataTableFiltrada() {
+            const base = this.anexosRaw.filter(row => Number(row.estado) !== 0);
             // Si no hay ningun filtro activo, devolver todos los registros
             if (!this.anioSeleccionado && !this.tipoFicha && !this.unidadSeleccionada &&
                 !this.servicioSeleccionado && !this.centroSeleccionado && !this.anexoSeleccionado) {
-                return this.anexosRaw;
+                return base;
             }
 
             // Obtener nombres de los objetos seleccionados para comparacion exacta
@@ -4565,7 +4596,7 @@ export default {
             const servicio = this.servicios.find(s => s.idServicio === this.servicioSeleccionado);
             const centro = this.centroSeleccionado;
 
-            return this.anexosRaw.filter(row => {
+            return base.filter(row => {
                 if (this.anioSeleccionado && row.periodo !== this.anioSeleccionado) return false;
                 if (this.tipoFicha && row.tipo !== this.tipoFicha) return false;
                 if (this.unidadSeleccionada && row.nombreUnidad !== (unidad?.nombreUnidad || '')) return false;
