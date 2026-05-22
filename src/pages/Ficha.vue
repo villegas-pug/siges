@@ -2757,7 +2757,22 @@ export default {
         },
         normalizarListaIds(valor) {
             if (valor === null || valor === undefined) return [];
-            const valores = Array.isArray(valor) ? valor : String(valor).split(",");
+            let valores = [];
+
+            if (Array.isArray(valor)) {
+                valores = valor;
+            } else {
+                let texto = String(valor).trim();
+                if (!texto) return [];
+
+                texto = texto
+                    .replace(/^\[|\]$/g, "")
+                    .replace(/["']/g, "")
+                    .replace(/[;|]/g, ",");
+
+                valores = texto.split(",");
+            }
+
             return Array.from(
                 new Set(
                     valores
@@ -2765,6 +2780,24 @@ export default {
                         .filter(Boolean)
                 )
             );
+        },
+        async obtenerIdsPersonalValidaPersistidos(idAnexoCabecera, correlativo) {
+            const res = await this.$axios.get(
+                `${process.env.API_URL_SIGESU}/obtenerRespuestas`,
+                {
+                    params: {
+                        idAnexoCabecera,
+                        correlativo
+                    }
+                }
+            );
+
+            const detalleData = res.data?.data || res.data || null;
+            const idsPersonalValida = this.normalizarListaIds(
+                detalleData?.idsPersonalValida
+            );
+
+            return { detalleData, idsPersonalValida };
         },
 
         getOptionImage(pregunta, optOrIndex) {
@@ -4354,17 +4387,12 @@ export default {
             let detalleData = null;
 
             try {
-                const res = await this.$axios.get(
-                    `${process.env.API_URL_SIGESU}/obtenerRespuestas`,
-                    {
-                        params: {
-                            idAnexoCabecera: row.idAnexoCabecera,
-                            correlativo: row.correlativo
-                        }
-                    }
+                const validacionPersistida = await this.obtenerIdsPersonalValidaPersistidos(
+                    row.idAnexoCabecera,
+                    row.correlativo
                 );
-                detalleData = res.data?.data || null;
-                idsPersonalValida = this.normalizarListaIds(detalleData?.idsPersonalValida);
+                detalleData = validacionPersistida.detalleData;
+                idsPersonalValida = validacionPersistida.idsPersonalValida;
             } catch (error) {
                 console.error(error);
                 this.$q.notify({ type: "negative", message: "Error al obtener datos de validación de la ficha" });
@@ -4473,6 +4501,22 @@ export default {
                 item.validado = true;
                 item.contrasena = '';
                 this.$set(this.mostrarInputValidar, item.idPersonal, false);
+
+                try {
+                    const validacionPersistida = await this.obtenerIdsPersonalValidaPersistidos(
+                        this.fichaAValidar.idAnexoCabecera,
+                        this.fichaAValidar.correlativo
+                    );
+                    const idsValidados = validacionPersistida.idsPersonalValida;
+
+                    this.personalValidacion = this.personalValidacion.map(persona => ({
+                        ...persona,
+                        validado: idsValidados.includes(String(persona.idPersonal))
+                    }));
+                } catch (syncError) {
+                    console.error(syncError);
+                }
+
                 this.$q.notify({ type: "positive", message: `${item.nombre} validado correctamente` });
 
             } catch (error) {
