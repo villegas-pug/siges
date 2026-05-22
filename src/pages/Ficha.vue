@@ -309,9 +309,7 @@
                                                         DIRECTOR/COORDINADOR
                                                     </td>
                                                     <td class="text-dark">
-                                                        <q-select v-model="form.respDirector" :options="responsables"
-                                                            option-label="nombre" option-value="idPersonal" emit-value
-                                                            map-options outlined dense disable />
+                                                        <q-input v-model="form.respDirector" type="text" outlined dense readonly />
                                                     </td>
                                                 </tr>
 
@@ -2752,6 +2750,26 @@ export default {
             );
             return responsable ? responsable.nombre : "";
         },
+        resolverDirectorCentro(centro) {
+            if (!centro) {
+                return { respDirector: "", idDirector: null };
+            }
+
+            const centros = Array.isArray(this.centros) ? this.centros : [];
+            const centroMatch = centros.find(c =>
+                c?.idUnidadOrganica === centro?.idUnidadOrganica ||
+                String(c?.nombreUnidad || "").trim().toUpperCase() === String(centro?.nombreUnidad || "").trim().toUpperCase()
+            );
+
+            const fuente = centroMatch || centro;
+            const respDirector = String(fuente?.respDirector || centro?.respDirector || "").trim();
+            const idDirector = this.normalizarIdResponsable(fuente?.idPersonal ?? centro?.idPersonal);
+
+            return {
+                respDirector,
+                idDirector
+            };
+        },
         esFichaSuscrita(row) {
             return !!row && Number(row.estado) === 2;
         },
@@ -2832,7 +2850,7 @@ export default {
                 this.form.nombreCentro = row.nombreCentro;
                 await this.precargarTrabajadoresCentro();
                 this.form.respDirector = row.respDirector;
-                this.form.idDirector = row.idDirector;
+                this.form.idDirector = this.normalizarIdResponsable(row.idDirector ?? row.idPersonal);
                 this.form.idRespSupervision = this.normalizarIdResponsable(row.idRespSupervision);
                 this.form.idsSupervisados = this.parseIdSupervisado(row.idSupervisado);
 
@@ -2879,6 +2897,7 @@ export default {
                 this.form.nombreCentro = row.nombreCentro;
                 await this.precargarTrabajadoresCentro();
                 this.form.respDirector = row.respDirector;
+                this.form.idDirector = this.normalizarIdResponsable(row.idDirector ?? row.idPersonal);
                 this.form.idRespSupervision = this.normalizarIdResponsable(row.idRespSupervision);
                 this.form.idsSupervisados = this.parseIdSupervisado(row.idSupervisado);
                 this.form.tipoCentro = row.tipoCentro;
@@ -2986,6 +3005,7 @@ export default {
                 this.form.fechaRegistro = data.fechaRegistro;
                 this.form.audioUrl = data.audioUrl;
                 this.form.respDirector = data.respDirector;
+                this.form.idDirector = this.normalizarIdResponsable(data.idDirector ?? data.idPersonal);
                 this.form.tipoCentro = data.tipoCentro;
                 this.form.idRespSupervision = this.normalizarIdResponsable(data.idRespSupervision);
                 this.form.idsSupervisados = this.parseIdSupervisado(data.idSupervisado);
@@ -3218,8 +3238,13 @@ export default {
             this.form.codigoAnexo2 = anexo?.codigoAnexo2 || ''
             this.form.fechaRegistro = new Date().toISOString().substring(0, 10)
             this.form.idRespSupervision = null
-            this.form.respDirector = null
+            this.form.respDirector = ""
+            this.form.idDirector = null
             this.form.idsSupervisados = []
+
+            const directorCentro = this.resolverDirectorCentro(this.centroSeleccionado)
+            this.form.respDirector = directorCentro.respDirector
+            this.form.idDirector = directorCentro.idDirector
 
             // Precargar todo el personal del centro
             this.precargarTrabajadoresCentro()
@@ -3296,7 +3321,9 @@ export default {
             this.form.departamento = centro.departamento
             this.form.provincia = centro.provincia
             this.form.distrito = centro.distrito
-            this.form.respDirector = centro.respDirector;
+            const directorCentro = this.resolverDirectorCentro(centro);
+            this.form.respDirector = directorCentro.respDirector;
+            this.form.idDirector = directorCentro.idDirector;
             this.dialogCentros = false
         },
 
