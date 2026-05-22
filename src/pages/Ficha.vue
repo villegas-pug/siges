@@ -739,7 +739,7 @@
                                         </q-icon>
                                     </div>
                                     <!-- Mostrar input -->
-                                    <div v-else-if="mostrarInputValidar[props.row.idPersonal]" class="validar-input-row row q-gutter-xs items-center justify-center">
+                                    <div v-else-if="!esFichaSuscrita(fichaAValidar) && mostrarInputValidar[props.row.idPersonal]" class="validar-input-row row q-gutter-xs items-center justify-center">
                                         <q-input 
                                             v-model="props.row.contrasena" 
                                             type="password" 
@@ -766,6 +766,11 @@
                                             class="btn-validar-inline"
                                             size="sm"
                                             @click="$set(mostrarInputValidar, props.row.idPersonal, false)" />
+                                    </div>
+                                    <div v-else-if="esFichaSuscrita(fichaAValidar)" class="row justify-center items-center">
+                                        <q-icon name="verified" color="info" class="validar-status-icon">
+                                            <q-tooltip>Ficha validada</q-tooltip>
+                                        </q-icon>
                                     </div>
                                     <!-- Botón para mostrar input -->
                                     <div v-else class="row justify-center items-center">
@@ -795,9 +800,10 @@
                         <q-btn label="Cerrar" class="validar-btn validar-btn--close" v-close-popup flat />
                         <q-btn 
                             label="Dar Conformidad" 
+                            icon="fact_check"
                             class="btn-inabif validar-btn"
                             :loading="validandoConformidad"
-                            :disable="!todosValidados"
+                            :disable="!todosValidados || esFichaSuscrita(fichaAValidar)"
                             @click="darConformidad" />
                     </q-card-actions>
                 </q-card>
@@ -2663,6 +2669,20 @@ export default {
         puedeEditar(row) {
             return row && row.estado !== 2;
         },
+        esFichaSuscrita(row) {
+            return !!row && Number(row.estado) === 2;
+        },
+        normalizarListaIds(valor) {
+            if (valor === null || valor === undefined) return [];
+            const valores = Array.isArray(valor) ? valor : String(valor).split(",");
+            return Array.from(
+                new Set(
+                    valores
+                        .map(v => String(v).trim())
+                        .filter(Boolean)
+                )
+            );
+        },
 
         getOptionImage(pregunta, optOrIndex) {
             if (!pregunta || !pregunta.idPregunta || !pregunta.opciones) return null;
@@ -4186,38 +4206,33 @@ export default {
             let respDirector = row.respDirector;
             let idSupervisado = row.idSupervisado;
             let idsPersonalValida = [];
+            let detalleData = null;
+
+            try {
+                const res = await this.$axios.get(
+                    `${process.env.API_URL_SIGESU}/obtenerRespuestas`,
+                    {
+                        params: {
+                            idAnexoCabecera: row.idAnexoCabecera,
+                            correlativo: row.correlativo
+                        }
+                    }
+                );
+                detalleData = res.data?.data || null;
+                idsPersonalValida = this.normalizarListaIds(detalleData?.idsPersonalValida);
+            } catch (error) {
+                console.error(error);
+                this.$q.notify({ type: "negative", message: "Error al obtener datos de validación de la ficha" });
+            }
 
             // Si la tabla principal no trae los IDs de personal, los obtenemos del detalle
             if (!idRespSupervision || !respSupervision || !idDirector || !respDirector || !idSupervisado) {
-                try {
-                    const res = await this.$axios.get(
-                        `${process.env.API_URL_SIGESU}/obtenerRespuestas`,
-                        {
-                            params: {
-                                idAnexoCabecera: row.idAnexoCabecera,
-                                correlativo: row.correlativo
-                            }
-                        }
-                    );
-                    const data = res.data?.data;
-                    if (data) {
-                        if (!idRespSupervision) idRespSupervision = data.idRespSupervision;
-                        if (!respSupervision) respSupervision = data.respSupervision;
-                        if (!idDirector) idDirector = data.idDirector;
-                        if (!respDirector) respDirector = data.respDirector;
-                        if (!idSupervisado) idSupervisado = data.idSupervisado;
-                        if (data.idsPersonalValida) {
-                            idsPersonalValida = String(data.idsPersonalValida)
-                                .split(',')
-                                .map(s => s.trim())
-                                .filter(Boolean);
-                        }
-                    }
-                } catch (error) {
-                    console.error(error);
-                    this.$q.notify({ type: "negative", message: "Error al obtener datos de la ficha" });
-                    this.loadingCargarPersonal = false;
-                    return;
+                if (detalleData) {
+                    if (!idRespSupervision) idRespSupervision = detalleData.idRespSupervision;
+                    if (!respSupervision) respSupervision = detalleData.respSupervision;
+                    if (!idDirector) idDirector = detalleData.idDirector;
+                    if (!respDirector) respDirector = detalleData.respDirector;
+                    if (!idSupervisado) idSupervisado = detalleData.idSupervisado;
                 }
             }
 
@@ -4297,6 +4312,7 @@ export default {
         },
 
         async validarPersonal(item) {
+            if (this.esFichaSuscrita(this.fichaAValidar)) return;
             if (!item.contrasena) {
                 this.$q.notify({ type: "warning", message: "Ingrese la contraseña" });
                 return;
@@ -4323,6 +4339,7 @@ export default {
         },
 
         async darConformidad() {
+            if (this.esFichaSuscrita(this.fichaAValidar)) return;
             if (!this.todosValidados) {
                 this.$q.notify({ type: "warning", message: "Faltan personal por validar" });
                 return;
