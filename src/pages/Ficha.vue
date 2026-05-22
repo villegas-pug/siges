@@ -2874,10 +2874,26 @@ export default {
             if (!row || !row.idAnexoCabecera) return;
 
             this.$q.dialog({
-                title: "Confirmar",
-                message: "¿Desea anular la evaluación seleccionada?",
+                title: "ANULAR EVALUACIÓN",
+                message: `¿Anular la evaluación <strong>${row.nombreAnexo || ''}</strong>?`,
+                html: true,
                 cancel: true,
-                persistent: true
+                persistent: true,
+                class: "audio-delete-dialog dialog-mensaje",
+                focus: "cancel",
+                ok: {
+                    label: "Anular",
+                    icon: "delete",
+                    color: "negative",
+                    unelevated: true
+                },
+                cancel: {
+                    label: "Cancelar",
+                    icon: "close",
+                    color: "grey-5",
+                    textColor: "dark",
+                    unelevated: true
+                }
             }).onOk(async () => {
                 try {
                     await this.$axios.patch(
