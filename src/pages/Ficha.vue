@@ -144,51 +144,52 @@
                         <template v-slot:body-cell-acciones="scope">
                             <q-td :props="scope">
                                 <q-btn-dropdown dropdown-icon="settings" class="q-mr-xs acciones" dense>
-                                    <q-list style="min-width: 200px">
+                                    <q-list class="menu-acciones-ficha">
                                         <!-- Editar Evaluación -->
                                         <q-item
                                             :clickable="puedeEditar(scope.row)"
                                             v-close-popup
                                             @click="puedeEditar(scope.row) && editarRegistro(scope.row)"
+                                            class="menu-accion-item menu-accion-item--editar"
                                             :class="{ 'text-grey-6': !puedeEditar(scope.row) }"
                                         >
                                             <q-item-section avatar>
                                                 <q-avatar
                                                     icon="edit"
-                                                    :color="puedeEditar(scope.row) ? 'red' : 'grey'"
+                                                    :color="puedeEditar(scope.row) ? 'warning' : 'grey'"
                                                     text-color="white"
                                                 />
                                             </q-item-section>
-                                            <q-item-section>Editar Evaluación</q-item-section>
+                                            <q-item-section class="menu-accion-label">Editar Evaluación</q-item-section>
                                         </q-item>
 
                                         <!-- Eliminar Evaluación -->
-                                        <q-item clickable v-close-popup @click="eliminarRegistro(scope.row)">
+                                        <q-item clickable v-close-popup @click="eliminarRegistro(scope.row)" class="menu-accion-item menu-accion-item--anular">
                                             <q-item-section avatar>
-                                                <q-avatar icon="delete" color="red" text-color="white" />
+                                                <q-avatar icon="delete" color="negative" text-color="white" />
                                             </q-item-section>
-                                            <q-item-section>Anular Evaluación</q-item-section>
+                                            <q-item-section class="menu-accion-label">Anular Evaluación</q-item-section>
                                         </q-item>
                                         <!-- Visualizar Evaluación -->
-                                        <q-item clickable v-close-popup @click="verRegistro(scope.row)">
+                                        <q-item clickable v-close-popup @click="verRegistro(scope.row)" class="menu-accion-item menu-accion-item--ver">
                                             <q-item-section avatar>
-                                                <q-avatar icon="visibility" color="red" text-color="white" />
+                                                <q-avatar icon="visibility" color="primary" text-color="white" />
                                             </q-item-section>
-                                            <q-item-section>Ver Evaluación</q-item-section>
+                                            <q-item-section class="menu-accion-label">Ver Evaluación</q-item-section>
                                         </q-item>
                                         <!-- Visualizar Evaluación -->
-                                        <q-item clickable v-close-popup @click="abrirDialogAudios(scope.row)">
+                                        <q-item clickable v-close-popup @click="abrirDialogAudios(scope.row)" class="menu-accion-item menu-accion-item--audio">
                                             <q-item-section avatar>
-                                                <q-avatar icon="mic" color="red" text-color="white" />
+                                                <q-avatar icon="mic" color="secondary" text-color="white" />
                                             </q-item-section>
-                                            <q-item-section>Agregar Audio</q-item-section>
+                                            <q-item-section class="menu-accion-label">Agregar Audio</q-item-section>
                                         </q-item>
                                         <!-- Validar Ficha -->
-                                        <q-item clickable v-close-popup @click="abrirDialogValidarFicha(scope.row)">
+                                        <q-item clickable v-close-popup @click="abrirDialogValidarFicha(scope.row)" class="menu-accion-item menu-accion-item--validar">
                                             <q-item-section avatar>
-                                                <q-avatar icon="verified" color="red" text-color="white" />
+                                                <q-avatar icon="verified" color="positive" text-color="white" />
                                             </q-item-section>
-                                            <q-item-section>Validar Ficha</q-item-section>
+                                            <q-item-section class="menu-accion-label">Validar Ficha</q-item-section>
                                         </q-item>
                                     </q-list>
                                 </q-btn-dropdown>
@@ -2063,6 +2064,50 @@ audio {
     display: block;
 }
 
+.menu-acciones-ficha {
+    min-width: 220px;
+    max-width: 280px;
+    width: 100%;
+    min-width: 0;
+    border: 1px solid #e6edf5;
+    border-radius: 10px;
+    box-shadow: 0 8px 18px rgba(15, 35, 60, 0.18);
+    overflow: hidden;
+    background: #fff;
+}
+
+.menu-accion-item {
+    min-height: 48px;
+    padding: 6px 10px;
+    align-items: center;
+    transition: background-color 0.18s ease;
+}
+
+.menu-accion-item:hover {
+    background: #f4f8ff;
+}
+
+.menu-accion-item .q-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+}
+
+.menu-accion-label {
+    min-width: 0;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    color: #1f2d3d;
+}
+
+.menu-accion-item--anular:hover {
+    background: #fff2f2;
+}
+
+.menu-accion-item--anular .menu-accion-label {
+    color: #b71c1c;
+}
+
 .chip-estado {
     font-weight: 700;
     letter-spacing: 0.2px;
@@ -2331,6 +2376,22 @@ audio {
         height: 28px;
         min-width: 28px;
         min-height: 28px;
+    }
+
+    .menu-acciones-ficha {
+        min-width: 196px;
+        max-width: 92vw;
+    }
+
+    .menu-accion-item {
+        min-height: 44px;
+        padding: 6px 8px;
+    }
+
+    .menu-accion-item .q-avatar {
+        width: 30px;
+        height: 30px;
+        font-size: 15px;
     }
 }
 </style>
