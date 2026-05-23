@@ -194,9 +194,19 @@
                                             <q-item-section class="menu-accion-label">Agregar Audio</q-item-section>
                                         </q-item>
                                         <!-- Validar Ficha -->
-                                        <q-item clickable v-close-popup @click="abrirDialogValidarFicha(scope.row)" class="menu-accion-item menu-accion-item--validar">
+                                        <q-item
+                                            :clickable="puedeValidarFicha(scope.row)"
+                                            v-close-popup
+                                            @click="puedeValidarFicha(scope.row) && abrirDialogValidarFicha(scope.row)"
+                                            class="menu-accion-item menu-accion-item--validar"
+                                            :class="{ 'text-grey-6': !puedeValidarFicha(scope.row) }"
+                                        >
                                             <q-item-section avatar>
-                                                <q-avatar icon="verified" color="positive" text-color="white" />
+                                                <q-avatar
+                                                    icon="verified"
+                                                    :color="puedeValidarFicha(scope.row) ? 'positive' : 'grey'"
+                                                    text-color="white"
+                                                />
                                             </q-item-section>
                                             <q-item-section class="menu-accion-label">Validar Ficha</q-item-section>
                                         </q-item>
@@ -2744,6 +2754,9 @@ export default {
         puedeEditar(row) {
             return row && row.estado !== 2;
         },
+        puedeValidarFicha(row) {
+            return Number(row?.reqValidacion) === 1;
+        },
         normalizarIdResponsable(value) {
             if (value === null || value === undefined) return null;
             const texto = String(value).trim();
@@ -4593,6 +4606,13 @@ export default {
         },
 
         async abrirDialogValidarFicha(row) {
+            if (!this.puedeValidarFicha(row)) {
+                this.$q.notify({
+                    type: "warning",
+                    message: "Esta ficha no requiere validación"
+                });
+                return;
+            }
             this.fichaAValidar = row;
             this.personalValidacion = [];
             this.mostrarInputValidar = {};
