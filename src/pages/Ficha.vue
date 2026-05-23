@@ -2863,6 +2863,7 @@ export default {
                 this.form.idDirector = this.normalizarIdResponsable(row.idDirector ?? row.idPersonal);
                 this.form.idRespSupervision = this.normalizarIdResponsable(row.idRespSupervision);
                 this.form.idsSupervisados = this.parseIdSupervisado(row.idSupervisado);
+                this.sincronizarOpcionesSupervisados(row.idSupervisado, row.nombreSupervisado);
 
                 this.form.tipoCentro = row.tipoCentro;
 
@@ -2910,6 +2911,7 @@ export default {
                 this.form.idDirector = this.normalizarIdResponsable(row.idDirector ?? row.idPersonal);
                 this.form.idRespSupervision = this.normalizarIdResponsable(row.idRespSupervision);
                 this.form.idsSupervisados = this.parseIdSupervisado(row.idSupervisado);
+                this.sincronizarOpcionesSupervisados(row.idSupervisado, row.nombreSupervisado);
                 this.form.tipoCentro = row.tipoCentro;
 
                 // Capturar periodo y tipo desde la fila para modo visualización
@@ -3019,19 +3021,7 @@ export default {
                 this.form.tipoCentro = data.tipoCentro;
                 this.form.idRespSupervision = this.normalizarIdResponsable(data.idRespSupervision);
                 this.form.idsSupervisados = this.parseIdSupervisado(data.idSupervisado);
-
-                if (data.idSupervisado && data.nombreSupervisado) {
-                    const ids = this.parseIdSupervisado(data.idSupervisado);
-                    ids.forEach(id => {
-                        const existe = this.trabajadoresCentro.find(x => x.idPersonal === id);
-                        if (!existe) {
-                            this.trabajadoresCentro.push({
-                                idPersonal: String(id),
-                                nombre: data.nombreSupervisado
-                            });
-                        }
-                    });
-                }
+                this.sincronizarOpcionesSupervisados(data.idSupervisado, data.nombreSupervisado);
                 // Agrupar respuestas por secciones (cabecera)
                 const secciones = [];
                 let currentSeccion = { titulo: 'GENERAL', preguntas: [] }; // por defecto
@@ -3728,7 +3718,7 @@ export default {
                     fechaRegistro: this.form.fechaRegistro,
                     idRespSupervision: this.normalizarIdResponsable(this.form.idRespSupervision),
                     idDirector: this.form.idDirector,
-                    idSupervisado: this.form.idsSupervisados.join(','),
+                    idSupervisado: this.buildIdSupervisadoPayload(),
                     respuestas,
                     totales: {
                         conforme: this.totalesRespuestas.CONFORME,
@@ -4174,17 +4164,118 @@ export default {
             }
 
         },
+        buildIdSupervisadoPayload() {
+            const ids = Array.isArray(this.form.idsSupervisados)
+                ? this.form.idsSupervisados.map(id => String(id).trim()).filter(Boolean)
+                : [];
+            if (!ids.length) return '';
+
+            return ids.map(id => {
+                const trabajador = this.trabajadoresCentro.find(
+                    t => String(t.idPersonal) === id
+                );
+                const nombre = (trabajador && trabajador.nombre !== undefined && trabajador.nombre !== null)
+                    ? String(trabajador.nombre).replace(/[|,]/g, ' ').trim()
+                    : '';
+                return `${id},${nombre}`;
+            }).join('|');
+        },
         parseIdSupervisado(idSupervisado) {
-            if (!idSupervisado) return []
-            if (Array.isArray(idSupervisado)) return idSupervisado.map(String)
-            if (typeof idSupervisado === 'number') return [String(idSupervisado)]
-            if (typeof idSupervisado === 'string') {
-                return idSupervisado
-                    .split(',')
-                    .map(s => s.trim())
-                    .filter(Boolean)
+            if (!idSupervisado) return [];
+            if (Array.isArray(idSupervisado)) return idSupervisado.map(String);
+            if (typeof idSupervisado === 'number') return [String(idSupervisado)];
+            if (typeof idSupervisado !== 'string') return [];
+
+            const valor = idSupervisado.trim();
+            if (!valor) return [];
+
+            const tieneFormatoNuevo = valor.includes('|') || this.esFormatoIdNombreSimple(valor);
+
+            if (tieneFormatoNuevo) {
+                return valor
+                    .split('|')
+                    .map(segmento => {
+                        const item = segmento.trim();
+                        if (!item) return '';
+                        const posComa = item.indexOf(',');
+                        return (posComa === -1 ? item : item.slice(0, posComa)).trim();
+                    })
+                    .filter(Boolean);
             }
-            return []
+
+            return valor
+                .split(',')
+                .map(s => s.trim())
+                .filter(Boolean);
+        },
+        esFormatoIdNombreSimple(valor) {
+            const partes = valor.split(',');
+            if (partes.length !== 2) return false;
+            const id = (partes[0] || '').trim();
+            const nombre = (partes[1] || '').trim();
+            return /^\d+$/.test(id) && !!nombre;
+        },
+        parseIdSupervisadoConNombre(idSupervisado) {
+            if (typeof idSupervisado !== 'string') return [];
+            const valor = idSupervisado.trim();
+            if (!valor) return [];
+
+            if (!(valor.includes('|') || this.esFormatoIdNombreSimple(valor))) {
+                return [];
+            }
+
+            return valor
+                .split('|')
+                .map(segmento => {
+                    const item = segmento.trim();
+                    if (!item) return null;
+                    const posComa = item.indexOf(',');
+                    if (posComa === -1) {
+                        const soloId = item.trim();
+                        if (!soloId) return null;
+                        return { idPersonal: soloId, nombre: '' };
+                    }
+
+                    const idPersonal = item.slice(0, posComa).trim();
+                    const nombre = item.slice(posComa + 1).trim();
+                    if (!idPersonal) return null;
+                    return { idPersonal, nombre };
+                })
+                .filter(Boolean);
+        },
+        sincronizarOpcionesSupervisados(idSupervisado, nombreSupervisado) {
+            const detalle = this.parseIdSupervisadoConNombre(idSupervisado);
+
+            if (detalle.length) {
+                detalle.forEach(item => {
+                    const index = this.trabajadoresCentro.findIndex(
+                        t => String(t.idPersonal) === String(item.idPersonal)
+                    );
+
+                    if (index === -1) {
+                        this.trabajadoresCentro.push({
+                            idPersonal: String(item.idPersonal),
+                            nombre: item.nombre || `ID: ${item.idPersonal}`
+                        });
+                    } else if (item.nombre) {
+                        this.trabajadoresCentro[index].nombre = item.nombre;
+                    }
+                });
+                return;
+            }
+
+            if (idSupervisado && nombreSupervisado) {
+                const ids = this.parseIdSupervisado(idSupervisado);
+                ids.forEach(id => {
+                    const existe = this.trabajadoresCentro.find(x => x.idPersonal === id);
+                    if (!existe) {
+                        this.trabajadoresCentro.push({
+                            idPersonal: String(id),
+                            nombre: nombreSupervisado
+                        });
+                    }
+                });
+            }
         },
         async precargarTrabajadoresCentro() {
             const idUnidadOrganica = this.obtenerIdUnidadOrganicaCentro()
