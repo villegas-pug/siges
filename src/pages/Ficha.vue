@@ -332,7 +332,7 @@
                                                     </td>
                                                 </tr>
 
-                                                <tr>
+                                                <tr v-if="puedeMostrarSupervisados(form.reqSupervisados)">
                                                     <td class="text-left text-bold">
                                                         <q-icon name="person" class="q-mr-sm" />
                                                         SUPERVISADO (OS)
@@ -2506,7 +2506,8 @@ export default {
                 tipoCentro: '',
                 idRespSupervision: null,
                 idDirector: null,
-                idsSupervisados: []
+                idsSupervisados: [],
+                reqSupervisados: 1
 
             },
             // MODELOS
@@ -2754,6 +2755,9 @@ export default {
         puedeEditar(row) {
             return row && row.estado !== 2;
         },
+        puedeMostrarSupervisados(reqSupervisados) {
+            return Number(reqSupervisados) === 1;
+        },
         puedeValidarFicha(row) {
             return Number(row?.reqValidacion) === 1;
         },
@@ -2925,8 +2929,13 @@ export default {
                 this.form.respDirector = row.respDirector;
                 this.form.idDirector = this.normalizarIdResponsable(row.idDirector ?? row.idPersonal);
                 this.form.idRespSupervision = this.normalizarIdResponsable(row.idRespSupervision);
-                this.form.idsSupervisados = this.parseIdSupervisado(row.idSupervisado);
-                this.sincronizarOpcionesSupervisados(row.idSupervisado, row.nombreSupervisado);
+                this.form.reqSupervisados = Number(row?.reqSupervisados ?? 0);
+                if (this.puedeMostrarSupervisados(this.form.reqSupervisados)) {
+                    this.form.idsSupervisados = this.parseIdSupervisado(row.idSupervisado);
+                    this.sincronizarOpcionesSupervisados(row.idSupervisado, row.nombreSupervisado);
+                } else {
+                    this.form.idsSupervisados = [];
+                }
 
                 this.form.tipoCentro = row.tipoCentro;
 
@@ -2973,8 +2982,13 @@ export default {
                 this.form.respDirector = row.respDirector;
                 this.form.idDirector = this.normalizarIdResponsable(row.idDirector ?? row.idPersonal);
                 this.form.idRespSupervision = this.normalizarIdResponsable(row.idRespSupervision);
-                this.form.idsSupervisados = this.parseIdSupervisado(row.idSupervisado);
-                this.sincronizarOpcionesSupervisados(row.idSupervisado, row.nombreSupervisado);
+                this.form.reqSupervisados = Number(row?.reqSupervisados ?? 0);
+                if (this.puedeMostrarSupervisados(this.form.reqSupervisados)) {
+                    this.form.idsSupervisados = this.parseIdSupervisado(row.idSupervisado);
+                    this.sincronizarOpcionesSupervisados(row.idSupervisado, row.nombreSupervisado);
+                } else {
+                    this.form.idsSupervisados = [];
+                }
                 this.form.tipoCentro = row.tipoCentro;
 
                 // Capturar periodo y tipo desde la fila para modo visualización
@@ -3083,8 +3097,12 @@ export default {
                 this.form.idDirector = this.normalizarIdResponsable(data.idDirector ?? data.idPersonal);
                 this.form.tipoCentro = data.tipoCentro;
                 this.form.idRespSupervision = this.normalizarIdResponsable(data.idRespSupervision);
-                this.form.idsSupervisados = this.parseIdSupervisado(data.idSupervisado);
-                this.sincronizarOpcionesSupervisados(data.idSupervisado, data.nombreSupervisado);
+                if (this.puedeMostrarSupervisados(this.form.reqSupervisados)) {
+                    this.form.idsSupervisados = this.parseIdSupervisado(data.idSupervisado);
+                    this.sincronizarOpcionesSupervisados(data.idSupervisado, data.nombreSupervisado);
+                } else {
+                    this.form.idsSupervisados = [];
+                }
                 // Agrupar respuestas por secciones (cabecera)
                 const secciones = [];
                 let currentSeccion = { titulo: 'GENERAL', preguntas: [] }; // por defecto
@@ -3321,6 +3339,7 @@ export default {
             this.form.respDirector = ""
             this.form.idDirector = null
             this.form.idsSupervisados = []
+            this.form.reqSupervisados = Number(anexo?.reqSupervisados ?? 0)
 
             const directorCentro = this.resolverDirectorCentro(this.centroSeleccionado)
             this.form.respDirector = directorCentro.respDirector
@@ -3420,7 +3439,8 @@ export default {
                 responsable: "",
                 capacidad: null,
                 audioUrl: '',
-                idsSupervisados: []
+                idsSupervisados: [],
+                reqSupervisados: 1
             };
 
             this.preguntasAgrupadas = [];
@@ -3781,7 +3801,9 @@ export default {
                     fechaRegistro: this.form.fechaRegistro,
                     idRespSupervision: this.normalizarIdResponsable(this.form.idRespSupervision),
                     idDirector: this.form.idDirector,
-                    idSupervisado: this.buildIdSupervisadoPayload(),
+                    idSupervisado: this.puedeMostrarSupervisados(this.form.reqSupervisados)
+                        ? this.buildIdSupervisadoPayload()
+                        : '',
                     respuestas,
                     totales: {
                         conforme: this.totalesRespuestas.CONFORME,
