@@ -2783,6 +2783,46 @@ export default {
         esFichaSuscrita(row) {
             return !!row && Number(row.estado) === 2;
         },
+        formatearFechaHoraValidacion(fecha = new Date()) {
+            const pad = n => String(n).padStart(2, "0");
+            const dia = pad(fecha.getDate());
+            const mes = pad(fecha.getMonth() + 1);
+            const anio = fecha.getFullYear();
+            const hora = pad(fecha.getHours());
+            const minuto = pad(fecha.getMinutes());
+            const segundo = pad(fecha.getSeconds());
+            return `${dia}/${mes}/${anio}T${hora}:${minuto}:${segundo}`;
+        },
+        normalizarNombreValidacion(nombre) {
+            if (nombre === null || nombre === undefined) return "";
+            return String(nombre)
+                .replace(/[|,]/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+        },
+        normalizarCargoValidacion(cargo) {
+            if (cargo === null || cargo === undefined) return "";
+            return String(cargo)
+                .replace(/[|,]/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+        },
+        construirIdPersonalValidacion(item) {
+            const id = String(item?.idPersonal ?? "").trim();
+            const nombre = this.normalizarNombreValidacion(item?.nombre);
+            const cargo = this.normalizarCargoValidacion(item?.cargo);
+            const fechaHora = this.formatearFechaHoraValidacion();
+            return `${id},${nombre},${cargo},${fechaHora}`;
+        },
+        extraerIdPersonalValida(valor) {
+            const texto = String(valor ?? "").trim();
+            if (!texto) return "";
+            const limpio = texto.replace(/^["']|["']$/g, "").trim();
+            const posComa = limpio.indexOf(",");
+            if (posComa === -1) return limpio;
+            const id = limpio.slice(0, posComa).trim();
+            return id || limpio;
+        },
         normalizarListaIds(valor) {
             if (valor === null || valor === undefined) return [];
             let valores = [];
@@ -2795,16 +2835,26 @@ export default {
 
                 texto = texto
                     .replace(/^\[|\]$/g, "")
-                    .replace(/["']/g, "")
-                    .replace(/[;|]/g, ",");
+                    .replace(/["']/g, "");
 
-                valores = texto.split(",");
+                const esRegistroExtendidoUnico = /^\d+\s*,/.test(texto) &&
+                    /\d{2}\/\d{2}\/\d{4}[T ]\d{2}:\d{2}:\d{2}$/.test(texto);
+
+                if (texto.includes("|")) {
+                    valores = texto.split("|");
+                } else if (texto.includes(";")) {
+                    valores = texto.split(";");
+                } else if (esRegistroExtendidoUnico) {
+                    valores = [texto];
+                } else {
+                    valores = texto.split(",");
+                }
             }
 
             return Array.from(
                 new Set(
                     valores
-                        .map(v => String(v).trim())
+                        .map(v => this.extraerIdPersonalValida(v))
                         .filter(Boolean)
                 )
             );
@@ -4610,6 +4660,7 @@ export default {
                 personal.push({
                     idPersonal: idStr,
                     nombre: respSupervision || (encontrado ? encontrado.nombre : `ID: ${idStr}`),
+                    cargo: 'RESPONSABLE SUPERVISIÓN',
                     contrasena: '',
                     validado: yaValidado,
                     validando: false
@@ -4624,6 +4675,7 @@ export default {
                 personal.push({
                     idPersonal: idStr,
                     nombre: respDirector || (encontrado ? encontrado.nombre : `ID: ${idStr}`),
+                    cargo: 'DIRECTOR',
                     contrasena: '',
                     validado: yaValidado,
                     validando: false
@@ -4638,6 +4690,7 @@ export default {
                 personal.push({
                     idPersonal: id,
                     nombre: encontrado ? encontrado.nombre : `ID: ${id}`,
+                    cargo: 'SUPERVISADO',
                     contrasena: '',
                     validado: yaValidado,
                     validando: false
@@ -4664,8 +4717,9 @@ export default {
             item.validando = true;
 
             try {
+                const idPersonalParam = this.construirIdPersonalValidacion(item);
                 await this.$axios.patch(
-                    `${process.env.API_URL_SIGESU}/validatePersonalAnexoCabecera?idAnexoCabecera=${this.fichaAValidar.idAnexoCabecera}&idPersonal=${item.idPersonal}&password=${encodeURIComponent(item.contrasena)}`
+                    `${process.env.API_URL_SIGESU}/validatePersonalAnexoCabecera?idAnexoCabecera=${this.fichaAValidar.idAnexoCabecera}&idPersonal=${encodeURIComponent(idPersonalParam)}&password=${encodeURIComponent(item.contrasena)}`
                 );
 
                 item.validado = true;
