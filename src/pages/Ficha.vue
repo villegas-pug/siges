@@ -2462,6 +2462,7 @@ export default {
                 { id: 'NO PRESENCIAL', modo: 'NO PRESENCIAL' },
             ],
             acreVigente: null,
+            fechaAcreditacion: null,
             acreditaciones: [
                 { id: '1', acreditacion: 'SI' },
                 { id: '0', acreditacion: 'NO' },
@@ -2915,6 +2916,7 @@ export default {
             this.modo = "editar";
             try {
                 this.sincronizarModalidadDesdeFuente(row);
+                this.sincronizarAcreditacionDesdeFuente(row);
                 // Llenamos el form con los datos de la fila seleccionada
                 this.form.idAnexoCabecera = row.idAnexoCabecera;
                 this.form.idAnexo = row.idAnexo;
@@ -2969,6 +2971,7 @@ export default {
             this.modo = "ver";
             try {
                 this.sincronizarModalidadDesdeFuente(row);
+                this.sincronizarAcreditacionDesdeFuente(row);
 
                 this.form.idAnexoCabecera = row.idAnexoCabecera;
                 this.form.idAnexo = row.idAnexo;
@@ -3100,6 +3103,7 @@ export default {
                 this.form.tipoCentro = data.tipoCentro;
                 this.form.idRespSupervision = this.normalizarIdResponsable(data.idRespSupervision);
                 this.sincronizarModalidadDesdeFuente(data);
+                this.sincronizarAcreditacionDesdeFuente(data);
                 if (this.puedeMostrarSupervisados(this.form.reqSupervisados)) {
                     this.form.idsSupervisados = this.parseIdSupervisado(data.idSupervisado);
                     this.sincronizarOpcionesSupervisados(data.idSupervisado, data.nombreSupervisado);
@@ -3267,6 +3271,8 @@ export default {
             this.fichaPeriodo = this.anioSeleccionado;
             this.fichaTipo = this.tipoFicha;
             this.modoSupervision = null;
+            this.acreVigente = null;
+            this.fechaAcreditacion = null;
             if (this.anioSeleccionado === null || this.anioSeleccionado === undefined || this.anioSeleccionado === '') {
                 this.$q.notify({
                     type: 'warning',
@@ -3803,6 +3809,21 @@ export default {
                     return;
                 }
 
+                const acreditacionVigente = this.mostrarAcreditacion
+                    ? this.normalizarAcreditacionVigenteEntero(this.acreVigente)
+                    : 0;
+                const fechaAcreditacion = (this.mostrarAcreditacion && acreditacionVigente === 1)
+                    ? this.normalizarFechaAcreditacionISO(this.fechaAcreditacion)
+                    : null;
+
+                if (this.mostrarAcreditacion && acreditacionVigente === 1 && !fechaAcreditacion) {
+                    this.$q.notify({
+                        type: "warning",
+                        message: "Debe seleccionar FECHA DE ACREDITACIÓN cuando ACREDITACIÓN VIGENTE es SI"
+                    });
+                    return;
+                }
+
                 const payload = {
                     idAnexo: this.form.idAnexo,
                     idCentro: this.form.idCentro,
@@ -3817,6 +3838,8 @@ export default {
                         ? this.buildIdSupervisadoPayload()
                         : '',
                     modalidad,
+                    acreditacionVigente,
+                    fechaAcreditacion,
                     respuestas,
                     totales: {
                         conforme: this.totalesRespuestas.CONFORME,
@@ -3970,6 +3993,8 @@ export default {
             this.modo = null;
             this.seccionAbierta = null;
             this.modoSupervision = null;
+            this.acreVigente = null;
+            this.fechaAcreditacion = null;
         },
         normalizarModalidad(valor) {
             if (valor === null || valor === undefined) return null;
@@ -3979,9 +4004,32 @@ export default {
             if (texto === 'NO PRESENCIAL' || texto === 'NOPRESENCIAL' || texto === 'VIRTUAL') return 'NO PRESENCIAL';
             return null;
         },
+        normalizarAcreditacionVigenteEntero(valor) {
+            const texto = valor === null || valor === undefined ? '' : String(valor).trim().toUpperCase();
+            return (texto === '1' || texto === 'SI' || texto === 'S') ? 1 : 0;
+        },
+        normalizarFechaAcreditacionISO(valor) {
+            if (!valor) return null;
+            const texto = String(valor).trim();
+            const iso = texto.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (iso) return texto;
+            const latam = texto.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+            if (latam) {
+                const [, dd, mm, yyyy] = latam;
+                return `${yyyy}-${mm}-${dd}`;
+            }
+            return null;
+        },
         sincronizarModalidadDesdeFuente(fuente = {}) {
             const modalidadFuente = fuente.modalidad ?? fuente.modoSupervision ?? fuente.modo_supervision ?? null;
             this.modoSupervision = this.normalizarModalidad(modalidadFuente);
+        },
+        sincronizarAcreditacionDesdeFuente(fuente = {}) {
+            const acreFuente = fuente.acreditacionVigente ?? fuente.acreVigente ?? fuente.acreditacion ?? null;
+            const acreInt = this.normalizarAcreditacionVigenteEntero(acreFuente);
+            this.acreVigente = String(acreInt);
+            const fechaFuente = fuente.fechaAcreditacion ?? fuente.fecAcreditacion ?? fuente.fecha_acreditacion ?? null;
+            this.fechaAcreditacion = acreInt === 1 ? this.normalizarFechaAcreditacionISO(fechaFuente) : null;
         },
 
         async descargarPDF() {
