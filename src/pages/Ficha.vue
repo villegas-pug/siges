@@ -256,7 +256,7 @@
                                             <q-markup-table bordered :dense="$q.screen.gt.xs" class="rounded-borders datos-generales-tabla">
                                             <tbody>
 
-                                                <tr v-if="mostrarModalidad">
+                                                <tr>
                                                     <td class="text-left text-bold">
                                                         <q-icon name="person" class="q-mr-sm" />
                                                         MODALIDAD DE SUPERVISION
@@ -2458,8 +2458,8 @@ export default {
             ],
             modoSupervision: null,
             modalidades: [
-                { id: 'presencial', modo: 'PRESENCIAL' },
-                { id: 'virtual', modo: 'NO PRESENCIAL' },
+                { id: 'PRESENCIAL', modo: 'PRESENCIAL' },
+                { id: 'NO PRESENCIAL', modo: 'NO PRESENCIAL' },
             ],
             acreVigente: null,
             acreditaciones: [
@@ -2914,6 +2914,7 @@ export default {
             if (!this.puedeEditar(row)) return;
             this.modo = "editar";
             try {
+                this.sincronizarModalidadDesdeFuente(row);
                 // Llenamos el form con los datos de la fila seleccionada
                 this.form.idAnexoCabecera = row.idAnexoCabecera;
                 this.form.idAnexo = row.idAnexo;
@@ -2967,6 +2968,7 @@ export default {
         async verRegistro(row) {
             this.modo = "ver";
             try {
+                this.sincronizarModalidadDesdeFuente(row);
 
                 this.form.idAnexoCabecera = row.idAnexoCabecera;
                 this.form.idAnexo = row.idAnexo;
@@ -3097,6 +3099,7 @@ export default {
                 this.form.idDirector = this.normalizarIdResponsable(data.idDirector ?? data.idPersonal);
                 this.form.tipoCentro = data.tipoCentro;
                 this.form.idRespSupervision = this.normalizarIdResponsable(data.idRespSupervision);
+                this.sincronizarModalidadDesdeFuente(data);
                 if (this.puedeMostrarSupervisados(this.form.reqSupervisados)) {
                     this.form.idsSupervisados = this.parseIdSupervisado(data.idSupervisado);
                     this.sincronizarOpcionesSupervisados(data.idSupervisado, data.nombreSupervisado);
@@ -3791,6 +3794,15 @@ export default {
                     }
                 }
 
+                const modalidad = this.normalizarModalidad(this.modoSupervision);
+                if (!modalidad) {
+                    this.$q.notify({
+                        type: "warning",
+                        message: "Debe seleccionar MODALIDAD DE SUPERVISIÓN"
+                    });
+                    return;
+                }
+
                 const payload = {
                     idAnexo: this.form.idAnexo,
                     idCentro: this.form.idCentro,
@@ -3804,6 +3816,7 @@ export default {
                     idSupervisado: this.puedeMostrarSupervisados(this.form.reqSupervisados)
                         ? this.buildIdSupervisadoPayload()
                         : '',
+                    modalidad,
                     respuestas,
                     totales: {
                         conforme: this.totalesRespuestas.CONFORME,
@@ -3957,6 +3970,18 @@ export default {
             this.modo = null;
             this.seccionAbierta = null;
             this.modoSupervision = null;
+        },
+        normalizarModalidad(valor) {
+            if (valor === null || valor === undefined) return null;
+            const texto = String(valor).trim().toUpperCase();
+            if (!texto) return null;
+            if (texto === 'PRESENCIAL') return 'PRESENCIAL';
+            if (texto === 'NO PRESENCIAL' || texto === 'NOPRESENCIAL' || texto === 'VIRTUAL') return 'NO PRESENCIAL';
+            return null;
+        },
+        sincronizarModalidadDesdeFuente(fuente = {}) {
+            const modalidadFuente = fuente.modalidad ?? fuente.modoSupervision ?? fuente.modo_supervision ?? null;
+            this.modoSupervision = this.normalizarModalidad(modalidadFuente);
         },
 
         async descargarPDF() {
@@ -4897,20 +4922,6 @@ export default {
     },
     computed: {
 
-        codigosConModalidad() {
-            return [
-                "FO_CAR01", "FS_CAR01", "FS_CAR02",
-                "FO_CED01", "FS_CED01", "FS_CED02",
-                "FS_SEC01", "FS_SEC02",
-                "FS_ACE01", "FS_ACE02",
-                "FS_FAM01", "FS_FAM02",
-                "FS_AEA01", "FS_AEA02", "FS_AEA03",
-                "FS_INA01"
-            ]
-        },
-        mostrarModalidad() {
-            return this.codigosConModalidad.includes(this.form.codigoAnexo2)
-        },
         codigosConAcreditacion() {
             return [
                 "FO_CAR01", "FS_CAR02"
