@@ -3168,9 +3168,21 @@ export default {
                             case 'selectM':
                             case 'checkbox':
                                 if (p.respuesta) {
-                                    p.respuesta = p.respuesta.split('|');
                                     if (p.tipoControl === 'checkbox') {
-                                        p.respuesta = p.respuesta.map(v => v === '1');
+                                        p.respuesta = p.respuesta.split('|').map(v => v === '1');
+                                    } else {
+                                        const normalizar = str => str.toString().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+                                        const respuestaItems = p.respuesta
+                                            .split('|')
+                                            .map(v => v.trim())
+                                            .filter(Boolean);
+                                        p.respuesta = respuestaItems
+                                            .map(resp => {
+                                                const respNorm = normalizar(resp);
+                                                const match = p.opciones.find(o => normalizar(o.value) === respNorm);
+                                                return match ? match.value : null;
+                                            })
+                                            .filter(Boolean);
                                     }
                                 } else {
                                     p.respuesta = p.tipoControl === 'selectM' ? [] : [];
