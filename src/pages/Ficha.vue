@@ -869,7 +869,7 @@
                                     outlined
                                     dense
                                     clearable
-                                    accept="audio/*"
+                                    accept="audio/*,.mpeg"
                                     :disable="loadingAudios"
                                 >
                                     <template v-slot:prepend>
@@ -4122,14 +4122,120 @@ export default {
                 return;
             }
 
+            const extensionesAudioPermitidas = new Set([
+                "mp1", "mp2", "mp3", "mpeg",
+                "aac", "m4a",
+                "ogg", "oga", "opus",
+                "wav", "wave", "pcm", "lpcm",
+                "flac", "alac", "aif", "aiff",
+                "ape", "wv", "tta", "tak", "shn",
+                "wma", "amr", "awb",
+                "ac3", "eac3", "ec3", "dts", "dtshd", "thd", "mlp",
+                "ra", "ram", "au", "caf", "voc", "gsm", "spx",
+                "mid", "midi", "kar", "rmi",
+                "mod", "xm", "s3m", "it",
+                "dsd", "dsf", "dff",
+                "mpc", "oma", "aa3", "at3",
+                "webm", "weba"
+            ]);
+
+            const mimeAudioPermitidos = new Set([
+                "audio/mpeg",
+                "audio/mp1",
+                "audio/mp2",
+                "audio/mp3",
+                "audio/aac",
+                "audio/aacp",
+                "audio/mp4",
+                "audio/x-m4a",
+                "audio/ogg",
+                "audio/vorbis",
+                "audio/opus",
+                "audio/wav",
+                "audio/wave",
+                "audio/x-wav",
+                "audio/vnd.wave",
+                "audio/pcm",
+                "audio/lpcm",
+                "audio/l16",
+                "audio/l24",
+                "audio/flac",
+                "audio/x-flac",
+                "audio/alac",
+                "audio/x-alac",
+                "audio/aiff",
+                "audio/x-aiff",
+                "audio/ape",
+                "audio/x-ape",
+                "audio/wavpack",
+                "audio/x-wavpack",
+                "audio/tta",
+                "audio/x-tta",
+                "audio/x-tak",
+                "audio/x-shorten",
+                "audio/x-ms-wma",
+                "audio/amr",
+                "audio/amr-wb",
+                "audio/ac3",
+                "audio/eac3",
+                "audio/vnd.dolby.dd-raw",
+                "audio/vnd.dolby.ddplus",
+                "audio/vnd.dolby.mlp",
+                "audio/vnd.dts",
+                "audio/vnd.dts.hd",
+                "audio/vnd.rn-realaudio",
+                "audio/x-pn-realaudio",
+                "audio/basic",
+                "audio/x-caf",
+                "audio/x-voc",
+                "audio/gsm",
+                "audio/speex",
+                "audio/midi",
+                "audio/x-midi",
+                "audio/sp-midi",
+                "audio/mod",
+                "audio/x-mod",
+                "audio/xm",
+                "audio/s3m",
+                "audio/it",
+                "audio/dsd",
+                "audio/dsf",
+                "audio/dff",
+                "audio/musepack",
+                "audio/x-musepack",
+                "audio/atrac",
+                "audio/x-oma",
+                "audio/aa3",
+                "audio/at3",
+                "audio/webm",
+                "audio/weba"
+            ]);
+
+            const obtenerExtension = (nombreArchivo) => {
+                if (!nombreArchivo || typeof nombreArchivo !== "string") return "";
+                const partes = nombreArchivo.toLowerCase().split(".");
+                return partes.length > 1 ? partes.pop().trim() : "";
+            };
+
             const esArchivoAudio = (file) => {
                 if (!file) return false;
 
                 const mime = (file.type || "").toLowerCase();
-                if (mime.startsWith("audio/")) return true;
+                const extension = obtenerExtension(file.name || "");
 
-                const nombre = (file.name || "").toLowerCase();
-                return /\.(aac|aif|aiff|amr|flac|m4a|m4b|mid|midi|mp3|oga|ogg|opus|wav|weba|wma)$/i.test(nombre);
+                if (extension && extensionesAudioPermitidas.has(extension)) {
+                    return true;
+                }
+
+                if (mime) {
+                    if (mimeAudioPermitidos.has(mime)) return true;
+                    if (mime.startsWith("audio/")) {
+                        return !!extension && extensionesAudioPermitidas.has(extension);
+                    }
+                    return false;
+                }
+
+                return false;
             };
 
             if (!esArchivoAudio(this.audioFile)) {
