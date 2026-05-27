@@ -869,6 +869,7 @@
                                     outlined
                                     dense
                                     clearable
+                                    accept="audio/*"
                                     :disable="loadingAudios"
                                 >
                                     <template v-slot:prepend>
@@ -4118,6 +4119,21 @@ export default {
         async subirAudio() {
             if (!this.audioFile) {
                 this.$q.notify({ type: "warning", message: "Seleccione un archivo de audio" });
+                return;
+            }
+
+            const esArchivoAudio = (file) => {
+                if (!file) return false;
+
+                const mime = (file.type || "").toLowerCase();
+                if (mime.startsWith("audio/")) return true;
+
+                const nombre = (file.name || "").toLowerCase();
+                return /\.(aac|aif|aiff|amr|flac|m4a|m4b|mid|midi|mp3|oga|ogg|opus|wav|weba|wma)$/i.test(nombre);
+            };
+
+            if (!esArchivoAudio(this.audioFile)) {
+                this.$q.notify({ type: "negative", message: "Solo se permiten archivos de audio" });
                 return;
             }
 
