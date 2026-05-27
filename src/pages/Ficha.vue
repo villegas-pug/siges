@@ -571,8 +571,10 @@
                                                                     :value="pregunta.respuesta2"
                                                                     @input="val => $set(pregunta, 'respuesta2', pregunta.tipoDato2 === 'NUMBER' ? normalizarNumeroNoNegativo(val) : val)"
                                                                     :disable="esVisualizacion"
-                                                                    :type="pregunta.tipoDato2 === 'NUMBER' ? 'number' : 'text'"
+                                                                    :type="pregunta.tipoDato2 === 'NUMBER' ? 'number' : 'textarea'"
                                                                     :min="pregunta.tipoDato2 === 'NUMBER' ? 0 : null"
+                                                                    :autogrow="pregunta.tipoDato2 !== 'NUMBER'"
+                                                                    input-style="resize: none; overflow-wrap: anywhere; word-break: break-word;"
                                                                     :rules="validarPregunta2(pregunta)" />
 
                                                                 <q-select v-if="pregunta.tipoControl2 === 'select'" outlined
@@ -1149,6 +1151,11 @@
 .ficha-input .q-field__control {
     border-radius: 6px;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ficha-input :deep(textarea.q-field__native) {
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .ficha-input .q-field__control:hover {
