@@ -2791,19 +2791,9 @@ export default {
                 return { respDirector: "", idDirector: null };
             }
 
-            const centros = Array.isArray(this.centros) ? this.centros : [];
-            const centroMatch = centros.find(c =>
-                c?.idUnidadOrganica === centro?.idUnidadOrganica ||
-                String(c?.nombreUnidad || "").trim().toUpperCase() === String(centro?.nombreUnidad || "").trim().toUpperCase()
-            );
-
-            const fuente = centroMatch || centro;
-            const respDirector = String(fuente?.respDirector || centro?.respDirector || "").trim();
-            const idDirector = this.normalizarIdResponsable(fuente?.idPersonal ?? centro?.idPersonal);
-
             return {
-                respDirector,
-                idDirector
+                respDirector: String(centro.respDirector || "").trim(),
+                idDirector: this.normalizarIdResponsable(centro.idPersonal)
             };
         },
         esFichaSuscrita(row) {
