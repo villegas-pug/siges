@@ -13,10 +13,6 @@ const routes = [
             {path: '/inicio', component: () => import('pages/Principal.vue')},
             {path: '/ficha', component: () => import('pages/Ficha.vue')},
 
-
-
-
-
             //SEGURIDAD
             {path: '/personas', component: () => import('pages/seguridad/RegistroPersona.vue')},
             {path: '/permisos', component: () => import('pages/seguridad/AsignarPermisos.vue')},

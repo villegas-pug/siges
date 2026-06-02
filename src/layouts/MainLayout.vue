@@ -143,21 +143,32 @@ export default {
                     ]
                 },
             ],
+            sessionInterval: null,
+            sessionDialogOpen: false,
         }
     },
     async created() {
-        await this.recibirParametros();
-        await this.obtenerOpcionesMenu();
-
+        console.log('[Session] created() ejecutado')
+        if (this.$q.localStorage.has('sgs-idUsuario') && this.$q.localStorage.has('siges-session-token')) {
+            console.log('[Session] Sesión existente detectada, iniciando chequeo.')
+            this.startSessionCheck();
+            await this.obtenerOpcionesMenu();
+        } else {
+            console.log('[Session] No hay sesión válida, limpiando e iniciando recibirParametros()')
+            this.clearSession(false)
+            await this.recibirParametros();
+            await this.obtenerOpcionesMenu();
+        }
     },
 
     methods: {
         salir: function () {
             let keys = Object.keys(this.$q.localStorage.getAll());
-            let systemKeys = keys.filter(k => k.startsWith('sgs-'));
+            let systemKeys = keys.filter(k => k.startsWith('sgs-') || k.startsWith('siges-'));
             for (let i = 0; i < systemKeys.length; i++) {
                 this.$q.localStorage.remove(systemKeys[i]);
             }
+            if (this.sessionInterval) clearInterval(this.sessionInterval);
             window.location.href = 'https://srvapp01.inabif.gob.pe:8443/seguridad/SPrincipal';
         },
         async obtenerOpcionesMenu() {
@@ -303,6 +314,16 @@ export default {
                 this.$q.localStorage.set('sgs-idPersonal', data.idPersonal)
                 this.$q.localStorage.set('sgs-numeroDocumento', data.perNroDocumento)
 
+                // 7b️⃣ Guardar tokens de sesión
+                this.$q.localStorage.set('siges-token', token)
+                this.$q.localStorage.set('siges-payload', JSON.stringify(payload))
+                const sessionToken = this.createJwtToken(payload)
+                if (!sessionToken) {
+                    this.$q.notify({type: 'negative', message: 'Error al crear token de sesión. Verifica la consola.'})
+                    return
+                }
+                this.$q.localStorage.set('siges-session-token', sessionToken)
+                this.startSessionCheck()
 
                 // 8️⃣ Redirigir
                 this.$router.push({path: '/inicio'})
@@ -314,7 +335,138 @@ export default {
                     message: 'No se pudo validar el usuario'
                 })
             }
-        }
+        },
+
+        base64Url(source) {
+            let encoded = btoa(source)
+            encoded = encoded.replace(/=+$/, '')
+            encoded = encoded.replace(/\+/g, '-')
+            encoded = encoded.replace(/\//g, '_')
+            return encoded
+        },
+
+        createJwtToken(payload) {
+            if (!this.$CryptoJS) {
+                console.error('[Session] vue-cryptojs no está disponible. Verifica que src/boot/cryptojs.js esté registrado en quasar.conf.js.')
+                return null
+            }
+            const header = { alg: 'HS256', typ: 'JWT' }
+            const now = Math.floor(Date.now() / 1000)
+            const exp = now + (parseInt(process.env.TOKEN_EXPIRATION_MINUTES) * 60)
+            const body = { ...payload, exp }
+
+            const encodedHeader = this.base64Url(JSON.stringify(header))
+            const encodedBody = this.base64Url(JSON.stringify(body))
+            const signature = this.$CryptoJS.HmacSHA256(
+                `${encodedHeader}.${encodedBody}`,
+                process.env.TOKEN_SECRET_KEY
+            ).toString(this.$CryptoJS.enc.Base64)
+            const encodedSignature = signature.replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_')
+
+            return `${encodedHeader}.${encodedBody}.${encodedSignature}`
+        },
+
+        verifyJwtToken(token) {
+            if (!token || typeof token !== 'string') return null
+            const parts = token.split('.')
+            if (parts.length !== 3) return null
+
+            const [headerB64, payloadB64, signatureB64] = parts
+
+            const expectedSig = this.$CryptoJS.HmacSHA256(
+                `${headerB64}.${payloadB64}`,
+                process.env.TOKEN_SECRET_KEY
+            ).toString(this.$CryptoJS.enc.Base64)
+            const expectedSigUrl = expectedSig.replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_')
+
+            if (signatureB64 !== expectedSigUrl) return null
+
+            try {
+                const base64 = payloadB64.replace(/-/g, '+').replace(/_/g, '/')
+                const jsonPayload = decodeURIComponent(
+                    atob(base64)
+                        .split('')
+                        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                        .join('')
+                )
+                return JSON.parse(jsonPayload)
+            } catch (e) {
+                return null
+            }
+        },
+
+        startSessionCheck() {
+            console.log('[Session] startSessionCheck() ejecutado')
+            if (this.sessionInterval) clearInterval(this.sessionInterval)
+            this.checkSession() // chequeo inmediato
+            this.sessionInterval = setInterval(() => {
+                this.checkSession()
+            }, 5000)
+        },
+
+        checkSession() {
+            const sessionToken = this.$q.localStorage.getItem('siges-session-token')
+            if (!sessionToken) return
+
+            const payload = this.verifyJwtToken(sessionToken)
+            if (!payload) {
+                this.showSessionExpiredDialog()
+                return
+            }
+
+            const now = Math.floor(Date.now() / 1000)
+            console.log('[Session] checkSession - exp:', payload.exp, 'now:', now)
+            if (payload.exp && payload.exp <= now) {
+                console.log('[Session] Token expirado, mostrando diálogo')
+                this.showSessionExpiredDialog()
+            }
+        },
+
+        showSessionExpiredDialog() {
+            console.log('[Session] showSessionExpiredDialog() invocado')
+            if (this.sessionDialogOpen) return
+            this.sessionDialogOpen = true
+            if (this.sessionInterval) clearInterval(this.sessionInterval)
+
+            this.$q.dialog({
+                title: 'Sesión expirada',
+                message: 'Su sesión ha vencido. ¿Desea continuar trabajando?',
+                persistent: true,
+                noBackdropDismiss: true,
+                ok: {
+                    label: 'Sí, continuar',
+                    color: 'positive'
+                },
+                cancel: {
+                    label: 'No, salir',
+                    color: 'negative',
+                    flat: true
+                },
+                class: 'bg-header-dialog'
+            }).onOk(() => {
+                const originalPayload = this.$q.localStorage.getItem('siges-payload')
+                if (originalPayload) {
+                    const newToken = this.createJwtToken(JSON.parse(originalPayload))
+                    this.$q.localStorage.set('siges-session-token', newToken)
+                }
+                this.sessionDialogOpen = false
+                this.startSessionCheck()
+            }).onCancel(() => {
+                this.sessionDialogOpen = false
+                this.clearSession()
+            })
+        },
+
+        clearSession(redirect = true) {
+            console.log('[Session] clearSession() ejecutado')
+            if (this.sessionInterval) clearInterval(this.sessionInterval)
+            const keys = Object.keys(this.$q.localStorage.getAll())
+            keys.filter(k => k.startsWith('sgs-') || k.startsWith('siges-'))
+                .forEach(k => this.$q.localStorage.remove(k))
+            if (redirect) {
+                window.location.href = 'https://srvapp01.inabif.gob.pe:8443/intranet'
+            }
+        },
 
     },
 
