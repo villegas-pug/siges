@@ -773,13 +773,24 @@
                                     <div v-else-if="!esFichaSuscrita(fichaAValidar) && mostrarInputValidar[props.row.idPersonal]" class="validar-input-row row q-gutter-xs items-center justify-center">
                                         <q-input 
                                             v-model="props.row.contrasena" 
-                                            type="password" 
+                                            :type="mostrarContrasenaValidar[props.row.idPersonal] ? 'text' : 'password'"
                                             outlined dense 
                                             placeholder="Ingrese contraseña"
                                             class="input-validar"
                                             :disable="props.row.validando"
                                             @keyup.enter="validarPersonal(props.row)">
                                             <template v-slot:append>
+                                                <q-btn
+                                                    round dense flat
+                                                    :icon="mostrarContrasenaValidar[props.row.idPersonal] ? 'visibility_off' : 'visibility'"
+                                                    color="info"
+                                                    class="btn-validar-inline"
+                                                    :disable="props.row.validando"
+                                                    @click="$set(mostrarContrasenaValidar, props.row.idPersonal, !mostrarContrasenaValidar[props.row.idPersonal])">
+                                                    <q-tooltip>
+                                                        {{ mostrarContrasenaValidar[props.row.idPersonal] ? 'Ocultar contraseña' : 'Mostrar contraseña' }}
+                                                    </q-tooltip>
+                                                </q-btn>
                                                 <q-btn 
                                                     round dense flat
                                                     icon="check"
@@ -796,7 +807,7 @@
                                             color="grey"
                                             class="btn-validar-inline"
                                             size="sm"
-                                            @click="$set(mostrarInputValidar, props.row.idPersonal, false)" />
+                                            @click="ocultarInputValidar(props.row.idPersonal)" />
                                     </div>
                                     <!-- Botón para mostrar input -->
                                     <div v-else class="row justify-center items-center">
@@ -2283,9 +2294,9 @@ audio {
 
 .tabla-validar-ficha :deep(th:nth-child(3)),
 .tabla-validar-ficha :deep(td:nth-child(3)) {
-    width: 250px;
-    min-width: 250px;
-    max-width: 250px;
+    width: 280px;
+    min-width: 280px;
+    max-width: 280px;
     text-align: center;
 }
 
@@ -2301,7 +2312,7 @@ audio {
 .input-validar {
     min-width: 0;
     width: 100%;
-    max-width: 210px;
+    max-width: 230px;
 }
 
 .input-validar :deep(.q-field__control) {
@@ -2741,6 +2752,7 @@ export default {
             validandoConformidad: false,
             loadingCargarPersonal: false,
             mostrarInputValidar: {},
+            mostrarContrasenaValidar: {},
 
             dialogAudios: false,
             audioRow: null,
@@ -4842,6 +4854,7 @@ export default {
             this.fichaAValidar = row;
             this.personalValidacion = [];
             this.mostrarInputValidar = {};
+            this.mostrarContrasenaValidar = {};
             this.loadingCargarPersonal = true;
 
             let idRespSupervision = row.idRespSupervision;
@@ -4970,7 +4983,7 @@ export default {
 
                 item.validado = true;
                 item.contrasena = '';
-                this.$set(this.mostrarInputValidar, item.idPersonal, false);
+                this.ocultarInputValidar(item.idPersonal);
 
                 try {
                     const validacionPersistida = await this.obtenerIdsPersonalValidaPersistidos(
@@ -5027,6 +5040,13 @@ export default {
             this.fichaAValidar = null;
             this.personalValidacion = [];
             this.validandoConformidad = false;
+            this.mostrarInputValidar = {};
+            this.mostrarContrasenaValidar = {};
+        },
+
+        ocultarInputValidar(idPersonal) {
+            this.$set(this.mostrarInputValidar, idPersonal, false);
+            this.$set(this.mostrarContrasenaValidar, idPersonal, false);
         },
 
         obtenerIdUnidadOrganicaCentro() {
