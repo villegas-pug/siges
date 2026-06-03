@@ -149,6 +149,11 @@ export default {
     },
     async created() {
         console.log('[Session] created() ejecutado')
+        if (this.$q.localStorage.has('sgs-session-dialog-open')) {
+            console.log('[Session] Diálogo pendiente detectado, limpiando sesión.')
+            this.clearSession()
+            return
+        }
         if (this.$q.localStorage.has('sgs-idUsuario') && this.$q.localStorage.has('sgs-session-token')) {
             console.log('[Session] Sesión existente detectada, iniciando chequeo.')
             this.startSessionCheck();
@@ -426,6 +431,7 @@ export default {
             console.log('[Session] showSessionExpiredDialog() invocado')
             if (this.sessionDialogOpen) return
             this.sessionDialogOpen = true
+            this.$q.localStorage.set('sgs-session-dialog-open', '1')
             if (this.sessionInterval) clearInterval(this.sessionInterval)
 
             this.$q.dialog({
@@ -448,6 +454,7 @@ export default {
                 },
                 class: 'session-expired-dialog dialog-mensaje'
             }).onOk(() => {
+                this.$q.localStorage.remove('sgs-session-dialog-open')
                 const originalPayload = this.$q.localStorage.getItem('sgs-payload')
                 if (originalPayload) {
                     const newToken = this.createJwtToken(JSON.parse(originalPayload))
@@ -457,6 +464,7 @@ export default {
                 this.startSessionCheck()
             }).onCancel(() => {
                 this.sessionDialogOpen = false
+                this.$q.localStorage.remove('sgs-session-dialog-open')
                 this.clearSession()
             })
         },
