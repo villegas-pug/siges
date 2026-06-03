@@ -149,7 +149,7 @@ export default {
     },
     async created() {
         console.log('[Session] created() ejecutado')
-        if (this.$q.localStorage.has('sgs-idUsuario') && this.$q.localStorage.has('siges-session-token')) {
+        if (this.$q.localStorage.has('sgs-idUsuario') && this.$q.localStorage.has('sgs-session-token')) {
             console.log('[Session] Sesión existente detectada, iniciando chequeo.')
             this.startSessionCheck();
             await this.obtenerOpcionesMenu();
@@ -164,7 +164,7 @@ export default {
     methods: {
         salir: function () {
             let keys = Object.keys(this.$q.localStorage.getAll());
-            let systemKeys = keys.filter(k => k.startsWith('sgs-') || k.startsWith('siges-'));
+            let systemKeys = keys.filter(k => k.startsWith('sgs-') || k.startsWith('mda-'));
             for (let i = 0; i < systemKeys.length; i++) {
                 this.$q.localStorage.remove(systemKeys[i]);
             }
@@ -293,7 +293,7 @@ export default {
                 if (!data) {
                     const keys = Object.keys(this.$q.localStorage.getAll())
                     keys
-                        .filter(k => k.startsWith('sgs-') || k.startsWith('sg-'))
+                        .filter(k => k.startsWith('sgs-') || k.startsWith('mda-'))
                         .forEach(k => this.$q.localStorage.remove(k))
 
                     this.$q.notify({
@@ -315,14 +315,14 @@ export default {
                 this.$q.localStorage.set('sgs-numeroDocumento', data.perNroDocumento)
 
                 // 7b️⃣ Guardar tokens de sesión
-                this.$q.localStorage.set('siges-token', token)
-                this.$q.localStorage.set('siges-payload', JSON.stringify(payload))
+                this.$q.localStorage.set('sgs-token', token)
+                this.$q.localStorage.set('sgs-payload', JSON.stringify(payload))
                 const sessionToken = this.createJwtToken(payload)
                 if (!sessionToken) {
                     this.$q.notify({type: 'negative', message: 'Error al crear token de sesión. Verifica la consola.'})
                     return
                 }
-                this.$q.localStorage.set('siges-session-token', sessionToken)
+                this.$q.localStorage.set('sgs-session-token', sessionToken)
                 this.startSessionCheck()
 
                 // 8️⃣ Redirigir
@@ -405,7 +405,7 @@ export default {
         },
 
         checkSession() {
-            const sessionToken = this.$q.localStorage.getItem('siges-session-token')
+            const sessionToken = this.$q.localStorage.getItem('sgs-session-token')
             if (!sessionToken) return
 
             const payload = this.verifyJwtToken(sessionToken)
@@ -444,10 +444,10 @@ export default {
                 },
                 class: 'bg-header-dialog'
             }).onOk(() => {
-                const originalPayload = this.$q.localStorage.getItem('siges-payload')
+                const originalPayload = this.$q.localStorage.getItem('sgs-payload')
                 if (originalPayload) {
                     const newToken = this.createJwtToken(JSON.parse(originalPayload))
-                    this.$q.localStorage.set('siges-session-token', newToken)
+                    this.$q.localStorage.set('sgs-session-token', newToken)
                 }
                 this.sessionDialogOpen = false
                 this.startSessionCheck()
@@ -461,7 +461,7 @@ export default {
             console.log('[Session] clearSession() ejecutado')
             if (this.sessionInterval) clearInterval(this.sessionInterval)
             const keys = Object.keys(this.$q.localStorage.getAll())
-            keys.filter(k => k.startsWith('sgs-') || k.startsWith('siges-'))
+            keys.filter(k => k.startsWith('sgs-') || k.startsWith('mda-'))
                 .forEach(k => this.$q.localStorage.remove(k))
             if (redirect) {
                 window.location.href = 'https://srvapp01.inabif.gob.pe:8443/intranet'
