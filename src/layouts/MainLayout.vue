@@ -435,14 +435,18 @@ export default {
                 noBackdropDismiss: true,
                 ok: {
                     label: 'Sí, continuar',
-                    color: 'positive'
+                    color: 'positive',
+                    unelevated: true,
+                    icon: 'check_circle'
                 },
                 cancel: {
                     label: 'No, salir',
-                    color: 'negative',
-                    flat: true
+                    color: 'grey-5',
+                    textColor: 'dark',
+                    unelevated: true,
+                    icon: 'logout'
                 },
-                class: 'bg-header-dialog'
+                class: 'session-expired-dialog dialog-mensaje'
             }).onOk(() => {
                 const originalPayload = this.$q.localStorage.getItem('sgs-payload')
                 if (originalPayload) {

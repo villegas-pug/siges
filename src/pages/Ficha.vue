@@ -232,7 +232,7 @@
                     </q-card-section>
 
                     <!-- BODY -->
-                        <q-card-section class="ficha-body" style="flex: 1; overflow-y: auto;">
+                        <q-card-section class="ficha-body">
 
                         <q-card flat>
 
@@ -1020,15 +1020,34 @@
     width: 95%;
     max-width: 900px;
     margin: 0 auto;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 .ficha-scroll-wrapper {
     display: flex;
     flex-direction: column;
+    flex: 1 1 auto;
     max-height: 80vh;
     width: 100%;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.ficha-body {
+    flex: 1 1 auto;
+    min-height: 0;
     min-width: 0;
     overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.ficha-body > .q-card {
+    min-width: 0;
 }
 
 .tabla-scroll-container {
@@ -1080,6 +1099,7 @@
 
 .ficha-header {
     display: flex;
+    flex: 0 0 auto;
     align-items: flex-start;
     gap: 12px;
     padding: 16px 20px;
@@ -1434,12 +1454,42 @@
     .ficha-dialog {
         width: 100%;
         max-width: 100%;
+        height: 100vh;
+        max-height: 100vh;
         margin: 0;
         border-radius: 0;
     }
 
     .ficha-scroll-wrapper {
-        max-height: 100vh;
+        height: 100%;
+        max-height: 100%;
+    }
+
+    .ficha-header {
+        padding: 10px 14px;
+    }
+
+    .ficha-body {
+        padding: 10px 12px;
+    }
+
+    .ficha-footer {
+        padding: 10px 12px;
+        column-gap: 8px;
+        row-gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .ficha-footer .q-btn {
+        flex: 1 1 132px;
+        max-width: 180px;
+    }
+
+    @supports (height: 100dvh) {
+        .ficha-dialog {
+            height: 100dvh;
+            max-height: 100dvh;
+        }
     }
 
     .tabla-scroll-container .q-markup-table {
@@ -2010,6 +2060,7 @@ audio {
 
 /* Footer del diálogo */
 .ficha-footer {
+    flex: 0 0 auto;
     border-top: 1px solid #e0e0e0;
     padding: 16px 24px;
     background-color: #fafbfc;
