@@ -221,7 +221,7 @@
             </div>
             <q-dialog v-model="dialog" persistent @hide="resetModo">
                 <q-card class="ficha-dialog">
-                    <div class="ficha-scroll-wrapper">
+                    <div ref="fichaScrollWrapper" class="ficha-scroll-wrapper">
 
                         <!-- HEADER -->
                         <q-card-section class="bg-inabif ficha-header">
@@ -636,10 +636,26 @@
                     </q-card-section>
 
                     <!-- FOOTER -->
-                        <q-card-actions class="ficha-footer" align="center">
+                        <q-card-actions
+                            ref="fichaFooter"
+                            class="ficha-footer"
+                            align="center"
+                            :style="fichaFooterFloatingStyle"
+                        >
 
-                            <q-btn v-if="!esVisualizacion" label="Guardar" icon="save" type="submit" @click="guardarTodo" class="ficha-btn-guardar" />
-                            <q-btn label="Cancelar" v-close-popup class="ficha-btn-cancelar" style="min-width: 70px;" />
+                            <q-btn
+                                class="ficha-footer-drag"
+                                icon="open_with"
+                                round
+                                dense
+                                flat
+                                aria-label="Mover acciones"
+                                title="Mover acciones"
+                                @mousedown.prevent="iniciarArrastreFooterFicha"
+                                @touchstart.prevent="iniciarArrastreFooterFicha"
+                            />
+                            <q-btn v-if="!esVisualizacion" label="Guardar" icon="save" type="submit" @click="guardarTodo" class="ficha-btn-guardar" title="Guardar" />
+                            <q-btn label="Cancelar" icon="close" v-close-popup class="ficha-btn-cancelar" style="min-width: 70px;" title="Cancelar" />
                         </q-card-actions>
                     </div>
                 </q-card>
@@ -1463,6 +1479,7 @@
     .ficha-scroll-wrapper {
         height: 100%;
         max-height: 100%;
+        position: relative;
     }
 
     .ficha-header {
@@ -1470,19 +1487,93 @@
     }
 
     .ficha-body {
-        padding: 10px 12px;
+        padding: 10px 12px calc(92px + env(safe-area-inset-bottom, 0px));
     }
 
     .ficha-footer {
-        padding: 10px 12px;
+        position: absolute;
+        left: auto;
+        right: 12px;
+        bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+        z-index: 5;
+        display: inline-flex;
+        width: max-content;
+        max-width: calc(100% - 24px);
+        padding: 0;
+        border: 0 !important;
+        border-top: 0 !important;
+        background: transparent !important;
+        background-color: transparent !important;
+        box-shadow: none;
         column-gap: 8px;
         row-gap: 8px;
         flex-wrap: wrap;
+        justify-content: flex-end;
+        pointer-events: none;
     }
 
     .ficha-footer .q-btn {
-        flex: 1 1 132px;
-        max-width: 180px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 56px;
+        width: 56px;
+        min-width: 56px !important;
+        max-width: 56px;
+        height: 56px;
+        min-height: 56px;
+        border-radius: 50%;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
+        pointer-events: auto;
+    }
+
+    .ficha-footer .q-btn :deep(.q-btn__wrapper) {
+        width: 100%;
+        height: 100%;
+        min-height: 56px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .ficha-footer .q-btn :deep(.q-btn__content) {
+        width: 100%;
+        height: 100%;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+    }
+
+    .ficha-footer .q-btn :deep(.q-icon) {
+        margin: 0;
+        font-size: 24px;
+        line-height: 1;
+    }
+
+    .ficha-footer .q-btn :deep(.q-btn__content span:not(.q-icon)) {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .ficha-footer .ficha-footer-drag {
+        display: inline-flex;
+        color: #455a64;
+        background-color: #ffffff;
+        cursor: grab;
+        touch-action: none;
+    }
+
+    .ficha-footer .ficha-footer-drag:active {
+        cursor: grabbing;
     }
 
     @supports (height: 100dvh) {
@@ -2074,6 +2165,10 @@ audio {
     min-width: 100px;
 }
 
+.ficha-footer-drag {
+    display: none;
+}
+
 .ficha-obligatorio {
     color: #BF0411;
     margin-left: 4px;
@@ -2502,6 +2597,12 @@ export default {
             loading: false,
             preguntasRaw: [],
             seccionAbierta: null,
+            fichaFooterPosicion: { x: null, y: null },
+            fichaFooterArrastre: {
+                activo: false,
+                offsetX: 0,
+                offsetY: 0
+            },
             modoEdicion: false,
             loadingUnidades: false,
             loadingServicios: false,
@@ -2824,6 +2925,95 @@ export default {
     },
     methods: {
 
+        resetFooterFichaFlotante() {
+            this.fichaFooterPosicion = { x: null, y: null };
+            this.fichaFooterArrastre = {
+                activo: false,
+                offsetX: 0,
+                offsetY: 0
+            };
+            this.removerEventosArrastreFooterFicha();
+        },
+        obtenerPuntoArrastreFooterFicha(event) {
+            const touch = event.touches && event.touches[0]
+                ? event.touches[0]
+                : event.changedTouches && event.changedTouches[0]
+                    ? event.changedTouches[0]
+                    : event;
+            return {
+                x: touch.clientX,
+                y: touch.clientY
+            };
+        },
+        limitarPosicionFooterFicha(x, y) {
+            const wrapper = this.$refs.fichaScrollWrapper;
+            const footer = this.$refs.fichaFooter && this.$refs.fichaFooter.$el
+                ? this.$refs.fichaFooter.$el
+                : this.$refs.fichaFooter;
+            if (!wrapper || !footer) return { x, y };
+
+            const margen = 12;
+            const maxX = Math.max(margen, wrapper.clientWidth - footer.offsetWidth - margen);
+            const maxY = Math.max(margen, wrapper.clientHeight - footer.offsetHeight - margen);
+
+            return {
+                x: Math.min(Math.max(x, margen), maxX),
+                y: Math.min(Math.max(y, margen), maxY)
+            };
+        },
+        iniciarArrastreFooterFicha(event) {
+            if (!this.$q.screen.lt.sm) return;
+
+            const wrapper = this.$refs.fichaScrollWrapper;
+            const footer = this.$refs.fichaFooter && this.$refs.fichaFooter.$el
+                ? this.$refs.fichaFooter.$el
+                : this.$refs.fichaFooter;
+            if (!wrapper || !footer) return;
+
+            const punto = this.obtenerPuntoArrastreFooterFicha(event);
+            const wrapperRect = wrapper.getBoundingClientRect();
+            const footerRect = footer.getBoundingClientRect();
+            const xActual = footerRect.left - wrapperRect.left;
+            const yActual = footerRect.top - wrapperRect.top;
+
+            this.fichaFooterPosicion = this.limitarPosicionFooterFicha(xActual, yActual);
+            this.fichaFooterArrastre = {
+                activo: true,
+                offsetX: punto.x - footerRect.left,
+                offsetY: punto.y - footerRect.top
+            };
+
+            document.addEventListener("mousemove", this.moverFooterFichaFlotante);
+            document.addEventListener("mouseup", this.finalizarArrastreFooterFicha);
+            document.addEventListener("touchmove", this.moverFooterFichaFlotante, { passive: false });
+            document.addEventListener("touchend", this.finalizarArrastreFooterFicha);
+            document.addEventListener("touchcancel", this.finalizarArrastreFooterFicha);
+        },
+        moverFooterFichaFlotante(event) {
+            if (!this.fichaFooterArrastre.activo) return;
+            if (event.cancelable) event.preventDefault();
+
+            const wrapper = this.$refs.fichaScrollWrapper;
+            if (!wrapper) return;
+
+            const punto = this.obtenerPuntoArrastreFooterFicha(event);
+            const wrapperRect = wrapper.getBoundingClientRect();
+            const x = punto.x - wrapperRect.left - this.fichaFooterArrastre.offsetX;
+            const y = punto.y - wrapperRect.top - this.fichaFooterArrastre.offsetY;
+
+            this.fichaFooterPosicion = this.limitarPosicionFooterFicha(x, y);
+        },
+        finalizarArrastreFooterFicha() {
+            this.fichaFooterArrastre.activo = false;
+            this.removerEventosArrastreFooterFicha();
+        },
+        removerEventosArrastreFooterFicha() {
+            document.removeEventListener("mousemove", this.moverFooterFichaFlotante);
+            document.removeEventListener("mouseup", this.finalizarArrastreFooterFicha);
+            document.removeEventListener("touchmove", this.moverFooterFichaFlotante);
+            document.removeEventListener("touchend", this.finalizarArrastreFooterFicha);
+            document.removeEventListener("touchcancel", this.finalizarArrastreFooterFicha);
+        },
         puedeEditar(row) {
             return row && row.estado !== 2;
         },
@@ -3014,6 +3204,7 @@ export default {
                 this.seccionAbierta = null;
 
                 // Abrir diálogo
+                this.resetFooterFichaFlotante();
                 this.dialog = true;
 
                 // 1️⃣ Cargar preguntas del anexo
@@ -3067,6 +3258,7 @@ export default {
                 // Cerrar acordeón
                 this.seccionAbierta = null;
 
+                this.resetFooterFichaFlotante();
                 this.dialog = true;
 
                 await this.cargarRespuestas();
@@ -3430,6 +3622,7 @@ export default {
             // Precargar todo el personal del centro
             this.precargarTrabajadoresCentro()
 
+            this.resetFooterFichaFlotante()
             this.dialog = true
 
 
@@ -4063,6 +4256,7 @@ export default {
         },
 
         resetModo() {
+            this.resetFooterFichaFlotante();
             this.modo = null;
             this.seccionAbierta = null;
             this.modoSupervision = null;
@@ -5144,6 +5338,9 @@ export default {
         this.cargarTablaAnexos();
         this.cargarResponsables()
     },
+    beforeDestroy() {
+        this.removerEventosArrastreFooterFicha();
+    },
     watch: {
         unidadSeleccionada() {
             this.servicioSeleccionado = null;
@@ -5172,6 +5369,22 @@ export default {
     },
     computed: {
 
+        fichaFooterFloatingStyle() {
+            if (
+                !this.$q.screen.lt.sm ||
+                this.fichaFooterPosicion.x === null ||
+                this.fichaFooterPosicion.y === null
+            ) {
+                return {};
+            }
+
+            return {
+                left: `${this.fichaFooterPosicion.x}px`,
+                top: `${this.fichaFooterPosicion.y}px`,
+                right: "auto",
+                bottom: "auto"
+            };
+        },
         codigosConAcreditacion() {
             return [
                 "FO_CAR01", "FS_CAR02"
