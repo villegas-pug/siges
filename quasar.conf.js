@@ -58,13 +58,13 @@ module.exports = function (ctx) {
 
                 // PROD
                 // API_URL_SIGESU: 'http://172.19.0.44:4000/api/ms-sigesu',
-                // API_URL_SIGESU: 'https://srvapp03.inabif.gob.pe:4000/api/ms-sigesu',
+                API_URL_SIGESU: 'https://srvapp03.inabif.gob.pe:4000/api/ms-sigesu',
                 
                 // DEV
-                API_URL_SIGESU: 'http://10.101.0.36:4000/api/ms-sigesu',
+                // API_URL_SIGESU: 'http://10.101.0.36:4000/api/ms-sigesu',
                 API_RUTA:'https://srvapp01.inabif.gob.pe:8443/SRH',
 
-                TOKEN_EXPIRATION_MINUTES: 1,
+                TOKEN_EXPIRATION_MINUTES: 240,
                 TOKEN_SECRET_KEY: 'e28dbddcb0a07a4b8dff3f1c414c49b3bcb61b06af8087a76b707c4fa1d47c3b63433597a71adc8842b720ae3f6b1bb6b1f1f68de64aae6e650786f6864e0a3e'
             }
         },
