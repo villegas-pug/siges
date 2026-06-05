@@ -322,7 +322,7 @@
                                                     </td>
                                                 </tr>
 
-                                                <tr>
+                                                <tr v-if="puedeMostrarDirector(form.reqDirector)">
                                                     <td class="text-left text-bold">
                                                         <q-icon name="person" class="q-mr-sm" />
                                                         DIRECTOR/COORDINADOR
@@ -2679,6 +2679,7 @@ export default {
                 idRespSupervision: null,
                 idDirector: null,
                 idsSupervisados: [],
+                reqDirector: 0,
                 reqSupervisados: 1
 
             },
@@ -3020,6 +3021,9 @@ export default {
         puedeMostrarSupervisados(reqSupervisados) {
             return Number(reqSupervisados) === 1;
         },
+        puedeMostrarDirector(reqDirector) {
+            return Number(reqDirector) === 1;
+        },
         puedeValidarFicha(row) {
             return Number(row?.reqValidacion) === 1;
         },
@@ -3180,10 +3184,16 @@ export default {
                 this.form.nombreUnidad = row.nombreUnidad;
                 this.form.nombreCentro = row.nombreCentro;
                 await this.precargarTrabajadoresCentro();
-                this.form.respDirector = row.respDirector;
-                this.form.idDirector = this.normalizarIdResponsable(row.idDirector ?? row.idPersonal);
                 this.form.idRespSupervision = this.normalizarIdResponsable(row.idRespSupervision);
                 this.form.reqSupervisados = Number(row?.reqSupervisados ?? 0);
+                this.form.reqDirector = Number(row?.reqDirector ?? 0);
+                if (this.puedeMostrarDirector(this.form.reqDirector)) {
+                    this.form.respDirector = row.respDirector;
+                    this.form.idDirector = this.normalizarIdResponsable(row.idDirector ?? row.idPersonal);
+                } else {
+                    this.form.respDirector = '';
+                    this.form.idDirector = null;
+                }
                 if (this.puedeMostrarSupervisados(this.form.reqSupervisados)) {
                     this.form.idsSupervisados = this.parseIdSupervisado(row.idSupervisado);
                     this.sincronizarOpcionesSupervisados(row.idSupervisado, row.nombreSupervisado);
@@ -3236,10 +3246,16 @@ export default {
                 this.form.nombreUnidad = row.nombreUnidad;
                 this.form.nombreCentro = row.nombreCentro;
                 await this.precargarTrabajadoresCentro();
-                this.form.respDirector = row.respDirector;
-                this.form.idDirector = this.normalizarIdResponsable(row.idDirector ?? row.idPersonal);
                 this.form.idRespSupervision = this.normalizarIdResponsable(row.idRespSupervision);
                 this.form.reqSupervisados = Number(row?.reqSupervisados ?? 0);
+                this.form.reqDirector = Number(row?.reqDirector ?? 0);
+                if (this.puedeMostrarDirector(this.form.reqDirector)) {
+                    this.form.respDirector = row.respDirector;
+                    this.form.idDirector = this.normalizarIdResponsable(row.idDirector ?? row.idPersonal);
+                } else {
+                    this.form.respDirector = '';
+                    this.form.idDirector = null;
+                }
                 if (this.puedeMostrarSupervisados(this.form.reqSupervisados)) {
                     this.form.idsSupervisados = this.parseIdSupervisado(row.idSupervisado);
                     this.sincronizarOpcionesSupervisados(row.idSupervisado, row.nombreSupervisado);
@@ -3351,8 +3367,14 @@ export default {
                 this.form.nombreServicio = data.nombreServicio;
                 this.form.fechaRegistro = data.fechaRegistro;
                 this.form.audioUrl = data.audioUrl;
-                this.form.respDirector = data.respDirector;
-                this.form.idDirector = this.normalizarIdResponsable(data.idDirector ?? data.idPersonal);
+                this.form.reqDirector = Number(data.reqDirector ?? 0);
+                if (this.puedeMostrarDirector(this.form.reqDirector)) {
+                    this.form.respDirector = data.respDirector;
+                    this.form.idDirector = this.normalizarIdResponsable(data.idDirector ?? data.idPersonal);
+                } else {
+                    this.form.respDirector = '';
+                    this.form.idDirector = null;
+                }
                 this.form.tipoCentro = data.tipoCentro;
                 this.form.idRespSupervision = this.normalizarIdResponsable(data.idRespSupervision);
                 this.sincronizarModalidadDesdeFuente(data);
@@ -3613,11 +3635,14 @@ export default {
             this.form.respDirector = ""
             this.form.idDirector = null
             this.form.idsSupervisados = []
+            this.form.reqDirector = Number(anexo?.reqDirector ?? 0)
             this.form.reqSupervisados = Number(anexo?.reqSupervisados ?? 0)
 
-            const directorCentro = this.resolverDirectorCentro(this.centroSeleccionado)
-            this.form.respDirector = directorCentro.respDirector
-            this.form.idDirector = directorCentro.idDirector
+            if (this.puedeMostrarDirector(this.form.reqDirector)) {
+                const directorCentro = this.resolverDirectorCentro(this.centroSeleccionado)
+                this.form.respDirector = directorCentro.respDirector
+                this.form.idDirector = directorCentro.idDirector
+            }
 
             // Precargar todo el personal del centro
             this.precargarTrabajadoresCentro()
@@ -3695,9 +3720,14 @@ export default {
             this.form.departamento = centro.departamento
             this.form.provincia = centro.provincia
             this.form.distrito = centro.distrito
-            const directorCentro = this.resolverDirectorCentro(centro);
-            this.form.respDirector = directorCentro.respDirector;
-            this.form.idDirector = directorCentro.idDirector;
+            if (this.puedeMostrarDirector(this.form.reqDirector)) {
+                const directorCentro = this.resolverDirectorCentro(centro);
+                this.form.respDirector = directorCentro.respDirector;
+                this.form.idDirector = directorCentro.idDirector;
+            } else {
+                this.form.respDirector = "";
+                this.form.idDirector = null;
+            }
             this.dialogCentros = false
         },
 
@@ -3715,6 +3745,7 @@ export default {
                 capacidad: null,
                 audioUrl: '',
                 idsSupervisados: [],
+                reqDirector: 0,
                 reqSupervisados: 1
             };
 
@@ -4052,7 +4083,7 @@ export default {
                         }))
                 );
 
-                if (!this.modoEdicion) {
+                if (!this.modoEdicion && this.puedeMostrarDirector(this.form.reqDirector)) {
                     const directorCentro = this.resolverDirectorCentro(this.centroSeleccionado);
                     this.form.respDirector = directorCentro.respDirector;
                     this.form.idDirector = directorCentro.idDirector;
@@ -4064,6 +4095,9 @@ export default {
                         });
                         return;
                     }
+                } else if (!this.puedeMostrarDirector(this.form.reqDirector)) {
+                    this.form.respDirector = '';
+                    this.form.idDirector = null;
                 }
 
                 const modalidad = this.normalizarModalidad(this.modoSupervision);
@@ -4099,7 +4133,7 @@ export default {
                     fechaAplicacion: new Date().toISOString().split('T')[0],
                     fechaRegistro: this.form.fechaRegistro,
                     idRespSupervision: this.normalizarIdResponsable(this.form.idRespSupervision),
-                    idDirector: this.form.idDirector,
+                    idDirector: this.puedeMostrarDirector(this.form.reqDirector) ? this.form.idDirector : null,
                     idSupervisado: this.puedeMostrarSupervisados(this.form.reqSupervisados)
                         ? this.buildIdSupervisadoPayload()
                         : '',
