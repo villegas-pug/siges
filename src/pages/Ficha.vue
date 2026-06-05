@@ -3356,7 +3356,7 @@ export default {
                 if (!data || !data.respuestas) return;
 
                 // Datos generales
-                this.form.nombreCentro = data.nombreCentro;
+                this.form.nombreCentro = data.centro || data.nombreCentro;
                 this.form.correlativo = data.correlativo;
                 this.form.nombreAnexo = data.nombreAnexo;
                 this.form.nombreUnidad = data.nombreUnidad;
