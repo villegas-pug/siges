@@ -4127,6 +4127,7 @@ export default {
                 const payload = {
                     idAnexo: this.form.idAnexo,
                     idCentro: this.form.idCentro,
+                    centro: this.form.nombreCentro || '',
                     correlativo: this.form.correlativo,
                     periodo: this.fichaPeriodo,
                     tipo: this.fichaTipo,
