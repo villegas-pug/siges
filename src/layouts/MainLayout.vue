@@ -70,6 +70,7 @@
                             :icon="menu.icono"
                             dense
                             :disable="menu.flgDeshabilitado === 1"
+                            :default-opened="menu.subitems.some(s => rutaActual === s.enlace)"
                         >
 
 
@@ -78,7 +79,9 @@
                                 :key="item.descripcion"
                                 clickable
                                 dense
+                                class="submenu-gap"
                                 :disable="item.flgDeshabilitado === 1"
+                                :class="{ 'submenu-activo': rutaActual === item.enlace }"
                                 @click="irA(item.enlace)"
                             >
                                 <q-item-section avatar>
@@ -96,6 +99,7 @@
                             clickable
                             dense
                             :disable="menu.flgDeshabilitado === 1"
+                            :class="{ 'submenu-activo': rutaActual === menu.enlace }"
                             @click="irA(menu.enlace)"
                         >
                             <q-item-section avatar>
@@ -483,6 +487,9 @@ export default {
     },
 
     computed: {
+        rutaActual() {
+            return this.$route.path.replace(/^\/+/, '')
+        },
         menuOrdenado() {
             return [...this.menuBackend]
                 .sort((a, b) => a.orden - b.orden)

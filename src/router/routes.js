@@ -13,6 +13,10 @@ const routes = [
             {path: '/inicio', component: () => import('pages/Principal.vue')},
             {path: '/ficha', component: () => import('pages/Ficha.vue')},
 
+            //REPORTES
+            {path: '/asistencia-economica', component: () => import('pages/reportes/ReporteAsistenciaEconomica.vue')},
+            {path: '/sigeir', component: () => import('pages/reportes/ReporteSigeir.vue')},
+
             //SEGURIDAD
             {path: '/personas', component: () => import('pages/seguridad/RegistroPersona.vue')},
             {path: '/permisos', component: () => import('pages/seguridad/AsignarPermisos.vue')},
