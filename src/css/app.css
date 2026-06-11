@@ -39,6 +39,18 @@ body{
 .q-expansion-item__container .q-hoverable:hover {
   background-color: silver;
 }
+.drawer-menu-expansion.q-expansion-item--expanded .q-expansion-item__container {
+  background-color: transparent;
+  color: inherit;
+}
+.drawer-menu-expansion.q-expansion-item--expanded .q-expansion-item__container > .q-item {
+  background-color: #BF0411;
+  color: white;
+}
+.drawer-menu-expansion.q-expansion-item--expanded .q-expansion-item__content {
+  background-color: transparent;
+  color: inherit;
+}
 .q-table th{
   opacity: 1.0;
 }

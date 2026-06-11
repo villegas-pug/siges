@@ -166,6 +166,8 @@ export default {
                 if (!data || data.size === 0) {
                     throw new Error('respuesta vacía');
                 }
+                console.log('[DEBUG EXCEL] headers:', headers);
+                console.log('[DEBUG EXCEL] data.size:', data && data.size);
                 const disposition = headers && (headers['content-disposition'] || headers['Content-Disposition']);
                 let filename = 'rpt-asistencia-economica.xlsx';
                 if (disposition) {

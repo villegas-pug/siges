@@ -68,6 +68,7 @@
                             v-if="menu.subitems.length"
                             :label="menu.descripcion"
                             :icon="menu.icono"
+                            class="drawer-menu-expansion"
                             dense
                             :disable="menu.flgDeshabilitado === 1"
                             :default-opened="menu.subitems.some(s => rutaActual === s.enlace)"
