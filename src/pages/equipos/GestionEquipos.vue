@@ -921,10 +921,8 @@ export default {
       }
     },
     eventoOpcVerDocumento: function (asignacion) {
-      console.log(asignacion);
     },
     eventoSeleccionPersonal: function (personal) {
-      console.log(personal);
       this.movimiento.personalNombre = personal.personalNombre;
       this.movimiento.personal = personal.id;
       this.dialogoBusquedaPersonalVisible = false;
@@ -1151,7 +1149,6 @@ export default {
         //.post(`${this.host}/SMesaAyuda`, datos, this.requestMultipartConfig)
         .then(response => {
           let respuesta = response.data;
-          console.log(respuesta);
           this.cargarEquipos();
           this.dialogoFinalAsignacionVisible = false;
         })
@@ -1198,7 +1195,6 @@ export default {
         .post(`${this.host}/SMesaAyuda`, datos, this.requestMultipartConfig)
         .then(response => {
           let respuesta = response.data;
-          console.log(respuesta);
           this.cargarEquipos();
           this.dialogoNuevaAsignacionVisible = false;
         })
@@ -1218,7 +1214,6 @@ export default {
         } else if (this.equipo.numero.length<9) {
           this.mostrarMensaje('EL NÚMERO DE TELÉFONO DEBE CONTENER 9 DÍGITOS', 'red', 'warning');
         } else {
-          console.log('GUARDANDO...');
         }
       }
     },

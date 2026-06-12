@@ -985,9 +985,9 @@ export default {
                             idIntegrante: this.idIntegrante,
                             modo: 'APROBAR_EGRESO_NNA',
                             idUsuario: this.$q.localStorage.getItem('mda-idUsuario')
-                            
+
                         })
-                            .then(() => {              
+                            .then(() => {
 
                                 this.$emit('cerrar');
                                 this.$emit('refrescar');
@@ -995,10 +995,9 @@ export default {
                                 this.mostrarMensaje('EGRESO APROBADO EXITOSAMENTE', 'green', 'check_circle');
                             })
                             .catch(err => {
-                                console.error(err);
                                 this.mostrarMensaje('ERROR AL APROBAR EGRESO', 'red', 'warning');
                             });
-                    } 
+                    }
                 }
             );
 
@@ -1019,9 +1018,9 @@ export default {
                             fechaEgreso: '',
                             modo: 'APROBAR_EGRESO',
                             idUsuario: this.$q.localStorage.getItem('mda-idUsuario')
-                            
+
                         })
-                            .then(() => {              
+                            .then(() => {
 
                                 this.$emit('cerrar');
                                 this.$emit('refrescar');
@@ -1029,10 +1028,9 @@ export default {
                                 this.mostrarMensaje('EGRESO APROBADO EXITOSAMENTE', 'green', 'check_circle');
                             })
                             .catch(err => {
-                                console.error(err);
                                 this.mostrarMensaje('ERROR AL APROBAR EGRESO', 'red', 'warning');
                             });
-                    } 
+                    }
                 }
             );
         },
@@ -1058,7 +1056,7 @@ export default {
               )
                 this.$emit('cerrar');
                 this.$emit('refrescar');
-              
+
                 this.mostrarMensaje('EGRESO SE REGISTRÓ CORRECTAMENTE', 'green', 'info')
 
                 // opcional: limpiar formulario o refrescar datos
@@ -1066,8 +1064,6 @@ export default {
                 // this.cargarEgresos()
 
             } catch (error) {
-                console.error('Error al guardar egreso:', error)
-
                 const mensaje =
                 error.response?.data?.message ||
                 'ERROR AL GUARDAR EGRESO. INTENTE NUEVAMENTE.'
@@ -1126,7 +1122,7 @@ export default {
                 )
                 this.$emit('cerrar');
                 this.$emit('refrescar');
-                
+
                 this.mostrarMensaje('EGRESO SE REGISTRÓ CORRECTAMENTE', 'green', 'info')
 
                 // opcional: limpiar formulario o refrescar datos
@@ -1134,8 +1130,6 @@ export default {
                 // this.cargarEgresos()
 
             } catch (error) {
-                console.error('Error al guardar egreso:', error)
-
                 const mensaje =
                 error.response?.data?.message ||
                 'ERROR AL GUARDAR EGRESO. INTENTE NUEVAMENTE.'
@@ -1453,7 +1447,6 @@ export default {
                     }      
 
             } catch (error) {
-                console.error('Error cargando sesiones:', error)
                 this.$q.notify({type: 'negative', message: 'Error al cargar sesiones'})
             } finally {
                 this.cargandoAliado = false

@@ -143,7 +143,6 @@ export default {
                     this.$q.notify({ type: 'negative', message: 'No se encontraron resultados' });
                 }
             } catch (error) {
-                console.error(error);
                 this.dataTabla = [];
                 this.$q.notify({ type: 'negative', message: 'Error al cargar el reporte' });
             } finally {
@@ -166,8 +165,6 @@ export default {
                 if (!data || data.size === 0) {
                     throw new Error('respuesta vacía');
                 }
-                console.log('[DEBUG EXCEL] headers:', headers);
-                console.log('[DEBUG EXCEL] data.size:', data && data.size);
                 const disposition = headers && (headers['content-disposition'] || headers['Content-Disposition']);
                 let filename = 'rpt-asistencia-economica.xlsx';
                 if (disposition) {
@@ -186,7 +183,6 @@ export default {
                 document.body.removeChild(link);
                 window.URL.revokeObjectURL(url);
             } catch (error) {
-                console.error(error);
                 this.$q.notify({ type: 'negative', message: 'Error al descargar Excel' });
             } finally {
                 this.descargandoExcel = false;

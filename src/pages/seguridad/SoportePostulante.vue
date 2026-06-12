@@ -200,7 +200,6 @@
             this.init();
 
             let date = new Date();
-            console.log(this.$q.localStorage.getItem('mda-correoInstitucional'));
         },
         methods: {
             init: function(){
@@ -216,7 +215,6 @@
             },
 
             cargarDatos: function () {
-                console.log('cargarDatos');
                 this.cargando.btnConsultarDatos = true;
 
                 let nroDocumento = this.filtro.nroDocumento=='' ? 'SF' : this.filtro.nroDocumento;
@@ -228,8 +226,6 @@
 
                 this.$axios.post(`${process.env.API_URL}/SMySqlTdPostulacion?accion=LISTAR`, form, {headers: {'Content-Type': 'multipart/form-data'}
                 }).then(response => {
-                    console.log("DATA: ", response.data);
-
                     if ( response.data.length==0 ) {
                         this.limpiarDatos();
                     } else {
@@ -288,8 +284,6 @@
             },
 
             validar: function( nombreObj, accion, tipo, obj=null ){
-                console.log("validar => accion: ",accion ," - tipo: ", tipo," - obj: ", obj," - nombre obj: ", nombreObj);
-
                 this.datosTmp.nombreObj = nombreObj;
                 this.datosTmp.accion[0] = accion;
                 this.datosTmp.tipo[0] = tipo;
@@ -333,16 +327,12 @@
 
                 // ************************************************ //
                 if ( flagObligatorio == 1 || flagInconsistente == 1 ) {
-                    console.log("MENSAJE");
                     msj = (flagObligatorio == 1 ? msjObligatorio : '') + (flagInconsistente == 1 ? (flagObligatorio == 1 ? '<br>' : '') + msjInconsistente : '');
                     this.abrirDialogoMensajeSistema( 'MENSAJE', obj , msj, '' );
                 } else if ( flagAdvertencia == 1 ) {
-                    console.log("CONFIRMACION");
                     msj = msjAdvertencia;
                     this.abrirDialogoMensajeSistema(  'CONFIRMACION', obj , msj, '¿Desea continuar?' );
                 } else {
-                    console.log("SIN ERRORES");
-                    console.log("validar => accion: ",accion ," - tipo: ", tipo," - obj: ", obj," - tipo obj: ", nombreObj);
                     this.obj.tdPostulacion.idUsuarioReg = this.obj.session.idUsuario;
 
                     if ( nombreObj == 'POSTULACION' && accion == 'ACTUALIZAR' ) {  this.actualizarPostulacion( tipo ); }
@@ -370,8 +360,6 @@
             },
 
             actualizarPostulacion: function( tipo ) {
-                console.log('actualizarPostulacion => tipo', tipo );
-
                 if (tipo=='CORREO') { this.cargando.btnActualizarCorreo = true; } else { this.cargando.btnAnularPostulacion = true; }
                 this.obj.tdPostulacion.tipo = tipo;
                 this.obj.tdPostulacion.idUsuarioReg = this.obj.session.idUsuario;
@@ -382,7 +370,6 @@
 
                 this.$axios.post(`${process.env.API_URL}/SMySqlTdPostulacion?accion=ACTUALIZAR`, formData, {headers: {'Content-Type': 'multipart/form-data'}
                 }).then(response => {
-                    console.log("DATA: ", response.data);
                     this.mostrarMensaje('SE ACTUALIZÓ CORRECTAMENTE', 'green', 'check_circle');
                     this.filtro.nroDocumento = this.obj.tdPostulacion.perNroDocumento;
                     this.cargarDatos();

@@ -134,7 +134,6 @@
 
               this.$axios.post(`${process.env.API_URL}/STsSistema?accion=LISTAR`, form, {headers: {'Content-Type': 'multipart/form-data'}
               }).then(response => {
-                  console.log(response);
                   this.lista = response.data;
               }).finally(() => {
                   this.cargando = false;
@@ -143,8 +142,6 @@
             },
 
             filaSeleccionada: function(evt, row, index, tipoRespuesta){
-              console.log('evt: ', evt, ' - index: ', index, ' - row: ', row);
-
               row.tipoRespuesta = tipoRespuesta;
               this.obj.nombre = tipoRespuesta=='1' ? row.sisNombre : '';
 

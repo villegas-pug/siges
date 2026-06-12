@@ -153,18 +153,14 @@ export default {
         }
     },
     async created() {
-        console.log('[Session] created() ejecutado')
         if (this.$q.localStorage.has('sgs-session-dialog-open')) {
-            console.log('[Session] Diálogo pendiente detectado, limpiando sesión.')
             this.clearSession()
             return
         }
         if (this.$q.localStorage.has('sgs-idUsuario') && this.$q.localStorage.has('sgs-session-token')) {
-            console.log('[Session] Sesión existente detectada, iniciando chequeo.')
             this.startSessionCheck();
             await this.obtenerOpcionesMenu();
         } else {
-            console.log('[Session] No hay sesión válida, limpiando e iniciando recibirParametros()')
             this.clearSession(false)
             await this.recibirParametros();
             await this.obtenerOpcionesMenu();
@@ -205,8 +201,6 @@ export default {
                     item => item.descripcion !== 'INICIO'
                 )
             }));
-
-            console.log("traer menus: ", request);
         },
         irA(ruta) {
             if (ruta && ruta !== '#') {
@@ -240,7 +234,6 @@ export default {
                 )
                 return JSON.parse(jsonPayload)
             } catch (e) {
-                console.error('JWT inválido', e)
                 return null
             }
         },
@@ -339,7 +332,6 @@ export default {
                 this.$router.push({path: '/inicio'})
 
             } catch (error) {
-                console.error(error)
                 this.$q.notify({
                     type: 'negative',
                     message: 'No se pudo validar el usuario'
@@ -357,7 +349,6 @@ export default {
 
         createJwtToken(payload) {
             if (!this.$CryptoJS) {
-                console.error('[Session] vue-cryptojs no está disponible. Verifica que src/boot/cryptojs.js esté registrado en quasar.conf.js.')
                 return null
             }
             const header = { alg: 'HS256', typ: 'JWT' }
@@ -406,7 +397,6 @@ export default {
         },
 
         startSessionCheck() {
-            console.log('[Session] startSessionCheck() ejecutado')
             if (this.sessionInterval) clearInterval(this.sessionInterval)
             this.checkSession() // chequeo inmediato
             this.sessionInterval = setInterval(() => {
@@ -425,15 +415,12 @@ export default {
             }
 
             const now = Math.floor(Date.now() / 1000)
-            console.log('[Session] checkSession - exp:', payload.exp, 'now:', now)
             if (payload.exp && payload.exp <= now) {
-                console.log('[Session] Token expirado, mostrando diálogo')
                 this.showSessionExpiredDialog()
             }
         },
 
         showSessionExpiredDialog() {
-            console.log('[Session] showSessionExpiredDialog() invocado')
             if (this.sessionDialogOpen) return
             this.sessionDialogOpen = true
             this.$q.localStorage.set('sgs-session-dialog-open', '1')
@@ -475,7 +462,6 @@ export default {
         },
 
         clearSession(redirect = true) {
-            console.log('[Session] clearSession() ejecutado')
             if (this.sessionInterval) clearInterval(this.sessionInterval)
             const keys = Object.keys(this.$q.localStorage.getAll())
             keys.filter(k => k.startsWith('sgs-') || k.startsWith('mda-'))

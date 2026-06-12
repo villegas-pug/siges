@@ -3224,7 +3224,6 @@ export default {
                 await this.cargarRespuestas();
 
             } catch (error) {
-                console.error(error);
                 this.$q.notify({ type: "negative", message: "Error al cargar registro para editar" });
             }
         },
@@ -3280,7 +3279,6 @@ export default {
                 await this.cargarRespuestas();
 
             } catch (error) {
-                console.error(error);
                 this.$q.notify({ type: "negative", message: "Error al visualizar registro" });
             }
         },
@@ -3322,7 +3320,6 @@ export default {
 
                     await this.cargarTablaAnexos();
                 } catch (error) {
-                    console.error(error);
                     this.$q.notify({
                         type: "negative",
                         message: "Error al anular la evaluación"
@@ -3476,7 +3473,6 @@ export default {
                 this.secciones = secciones;
 
             } catch (error) {
-                console.error(error);
                 this.$q.notify({ type: "negative", message: "Error al cargar las respuestas" });
             } finally {
                 this.loading = false;
@@ -3497,8 +3493,6 @@ export default {
                 this.anexosRaw = res.data.data || res.data
 
             } catch (error) {
-
-                console.error(error)
 
                 this.$q.notify({
                     type: 'negative',
@@ -3701,8 +3695,6 @@ export default {
             }
             catch (error) {
 
-                console.error(error)
-
 
             }
             finally {
@@ -3794,13 +3786,10 @@ export default {
 
                 const data = res.data.data || [];
 
-                console.log("Preguntas por filtros:", data);
-
                 // aquí podrías asignarlas a un array propio, por ejemplo:
                 this.preguntasFiltradas = data;
 
             } catch (error) {
-                console.error(error);
                 this.$q.notify({
                     type: "negative",
                     message: "Error al cargar preguntas por Unidad, Servicio y Anexo"
@@ -3956,11 +3945,7 @@ export default {
 
                 this.secciones = secciones
 
-                console.log("Preguntas cargadas:", this.secciones)
-
             } catch (error) {
-
-                console.error(error)
 
                 this.$q.notify({
                     type: 'negative',
@@ -3981,16 +3966,6 @@ export default {
         async guardarTodo() {
 
             try {
-                // DEBUG: Verificar valores de selects antes de guardar
-                console.log('=== DEBUG GUARDAR TODO ===');
-                this.secciones.forEach(sec => {
-                    sec.preguntas.forEach(p => {
-                        if (p.tipoControl === 'select' || p.tipoControl === 'selectM' || p.tipoControl === 'radio') {
-                            console.log(`Pregunta ID ${p.idPregunta} (${p.tipoControl}): respuesta =`, p.respuesta);
-                        }
-                    });
-                });
-
                 // limpiar respuestas ocultas solo en modo NUEVO
                 this.limpiarRespuestasOcultas()
                 // VALIDAR OBLIGATORIOS
@@ -4166,7 +4141,6 @@ export default {
                             `${process.env.API_URL_SIGESU}/resetValidacionAnexoCabecera?idAnexoCabecera=${this.form.idAnexoCabecera}`
                         );
                     } catch (resetError) {
-                        console.error('Error al resetear validaciones:', resetError);
                     }
 
                 } else {
@@ -4189,8 +4163,6 @@ export default {
                 this.cargarTablaAnexos();
 
             } catch (error) {
-
-                console.error(error);
 
                 this.$q.notify({
                     type: "negative",
@@ -4224,7 +4196,6 @@ export default {
                 this.unidades = res.data.data || [];
                 this.unidades.push({ idUnidad: null, nombreUnidad: 'TODOS' });
             } catch (error) {
-                console.error(error);
                 this.$q.notify({ type: 'negative', message: 'Error al cargar unidades' });
             } finally {
                 this.loadingUnidades = false;
@@ -4242,7 +4213,6 @@ export default {
                 });
                 this.servicios = res.data.data || [];
             } catch (error) {
-                console.error(error);
                 this.$q.notify({ type: 'negative', message: 'Error al cargar servicios' });
             } finally {
                 this.loadingServicios = false;
@@ -4263,7 +4233,6 @@ export default {
                 });
                 this.anexos = res.data.data || [];
             } catch (error) {
-                console.error(error);
                 this.$q.notify({ type: 'negative', message: 'Error al cargar anexos' });
             } finally {
                 this.loadingAnexos = false;
@@ -4283,7 +4252,6 @@ export default {
                 });
                 this.resultados = res.data.data || [];
             } catch (error) {
-                console.error(error);
                 this.$q.notify({ type: 'negative', message: 'Error al cargar resultados' });
             } finally {
                 this.loadingResultados = false;
@@ -4361,7 +4329,6 @@ export default {
                 //  window.URL.revokeObjectURL(url);
 
             } catch (error) {
-                console.error(error);
             }
         },
         getAudioUrl(file) {
@@ -4391,7 +4358,6 @@ export default {
                     estado: item.ACA_ESTADO
                 }));
             } catch (error) {
-                console.error(error);
                 this.$q.notify({ type: "negative", message: "Error al cargar audios" });
             } finally {
                 this.loadingAudios = false;
@@ -4561,7 +4527,6 @@ export default {
                 this.audioFile = null;
                 this.cargarAudios();
             } catch (error) {
-                console.error(error);
                 this.$q.notify({ type: "negative", message: "Error al guardar el audio" });
             } finally {
                 this.loadingAudios = false;
@@ -4631,7 +4596,6 @@ export default {
                     this.liberarAudioBlob();
                     this.cargarAudios();
                 } catch (error) {
-                    console.error(error);
                     this.$q.notify({ type: "negative", message: "Error al eliminar el audio" });
                 } finally {
                     this.loadingAudios = false;
@@ -4655,7 +4619,6 @@ export default {
                 this.liberarAudioBlob();
                 this.audioBlobUrl = window.URL.createObjectURL(res.data);
             } catch (error) {
-                console.error(error);
                 this.$q.notify({ type: "negative", message: "Error al reproducir el audio" });
             }
         },
@@ -4696,8 +4659,6 @@ export default {
                     .filter(r => r.idPersonal !== null)
 
             } catch (error) {
-
-                console.error(error)
 
                 this.$q.notify({
                     type: "negative",
@@ -4741,7 +4702,6 @@ export default {
                 })
 
             } catch (error) {
-                console.error(error)
             }
 
         },
@@ -4875,7 +4835,6 @@ export default {
                     idPersonal: String(t.idPersonal)
                 }))
             } catch (error) {
-                console.error(error)
             }
         },
         abrirDialogSupervisados() {
@@ -5116,7 +5075,6 @@ export default {
                     }
 
                 } catch (err) {
-                    console.error("Error parseando condición:", condicion)
                 }
 
                 return null
@@ -5153,7 +5111,6 @@ export default {
                 detalleData = validacionPersistida.detalleData;
                 idsPersonalValida = validacionPersistida.idsPersonalValida;
             } catch (error) {
-                console.error(error);
                 this.$q.notify({ type: "negative", message: "Error al obtener datos de validación de la ficha" });
             }
 
@@ -5185,7 +5142,6 @@ export default {
                 })) : [];
                 }
             } catch (error) {
-                console.error(error);
                 this.$q.notify({ type: "negative", message: "Error al cargar el personal del centro" });
             }
 
@@ -5277,13 +5233,11 @@ export default {
                         validado: idsValidados.includes(String(persona.idPersonal))
                     }));
                 } catch (syncError) {
-                    console.error(syncError);
                 }
 
                 this.$q.notify({ type: "positive", message: `${item.nombre} validado correctamente` });
 
             } catch (error) {
-                console.error(error);
                 this.$q.notify({ type: "negative", message: `Error al validar a ${item.nombre}` });
             } finally {
                 item.validando = false;
@@ -5309,7 +5263,6 @@ export default {
                 this.cargarTablaAnexos();
 
             } catch (error) {
-                console.error(error);
                 this.$q.notify({ type: "negative", message: "Error al dar conformidad a la ficha" });
             } finally {
                 this.validandoConformidad = false;
@@ -5359,7 +5312,6 @@ export default {
 
                 return centro?.idUnidadOrganica || null;
             } catch (error) {
-                console.error(error);
                 return null;
             }
         }

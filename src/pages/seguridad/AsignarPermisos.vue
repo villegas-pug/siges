@@ -320,7 +320,6 @@ import LoginLayout from "layouts/LoginLayout.vue";
         },
         created() {
             this.init();
-            console.log(1)
         },
         methods: {
             init: function(){
@@ -346,7 +345,6 @@ import LoginLayout from "layouts/LoginLayout.vue";
                 this.$axios.get(`${this.host}/SPermiso?action=itemsPermiso&u=${idU}&s=${idS}`)
                 .then(response => {
                     this.menu = response.data;
-                    console.log(this.menu);
                 }).catch((e) => {
                     this.gestionarError(e);
                 }).finally(() => {
@@ -356,8 +354,6 @@ import LoginLayout from "layouts/LoginLayout.vue";
           },
 
             habiliarPerfil: function ( idUsuPerfil, idUsuario, idPerfil, flgUsuarioActivo, flgUsuarioActivoB ) {
-                console.log( "habiliarPerfil => idUsuPerfil: " + idUsuPerfil + " - idUsuario: " + idUsuario + " - idPerfil: " + idPerfil + " - flgUsuarioActivo: " + flgUsuarioActivo + " - flgUsuarioActivoB: " + flgUsuarioActivoB );
-                // console.log(">>> " + obj.filtro.flgUsuarioActivoB)
                 this.obj.usuarioPerfil.idUsuarioReg = this.obj.session.idUsuario;
                 this.obj.usuarioPerfil.idUsuPerfil = 0;
                 this.obj.usuarioPerfil.upsPerfil = idPerfil;
@@ -370,7 +366,6 @@ import LoginLayout from "layouts/LoginLayout.vue";
 
                 this.$axios.post(`${process.env.API_URL}/STsUsuarioPerfil?accion=ACTUALIZAR`, formData, {headers: {'Content-Type': 'multipart/form-data'}
                 }).then(response => {
-                    console.log(response.data);
                     this.mostrarMensaje(flgUsuarioActivoB==true ? 'PERMISO HABILITADO' : 'PERMISO DESHABILITADO', 'green', 'check_circle');
                 }).catch((e) => {
                     this.gestionarError(e);
@@ -381,8 +376,6 @@ import LoginLayout from "layouts/LoginLayout.vue";
             },
 
             habilitarUsuCar: function ( idUsuario, idSistema, idUnidadOrganica, flgActivoB ) {
-                console.log( "habilitarUsuCar => idUsuario: " + idUsuario + " - idSistema: " + idSistema + " - idUnidadOrganica: " + idUnidadOrganica + " - flgActivoB: " + flgActivoB );
-                // console.log(">>> " + obj.filtro.flgUsuarioActivoB)
                 this.obj.usuCar.idUsuarioReg = this.obj.session.idUsuario;
                 this.obj.usuCar.idUsuario = idUsuario;
                 this.obj.usuCar.idSistema = idSistema;
@@ -397,7 +390,6 @@ import LoginLayout from "layouts/LoginLayout.vue";
 
                 this.$axios.post(`${process.env.API_URL}/STsUsuCar?accion=ACTUALIZAR`, formData, {headers: {'Content-Type': 'multipart/form-data'}
                 }).then(response => {
-                    console.log(response.data);
                     this.mostrarMensaje(flgActivoB==true ? 'HABILITADO' : 'DESHABILITADO', 'green', 'check_circle');
                 }).catch((e) => {
                     this.gestionarError(e);
@@ -408,8 +400,6 @@ import LoginLayout from "layouts/LoginLayout.vue";
             },
 
             abrirDialogoUsuarioCentro: function ( idSistema, idUsuario ) {
-                console.log("abrirDialogoCentros => idSistema: " + idSistema + " - idUsuario: " + idUsuario);
-
                 this.dialogo.frmUsuarioCentro = true;
 
                 let idUsuarioReg = this.obj.session.idUsuario;
@@ -425,7 +415,6 @@ import LoginLayout from "layouts/LoginLayout.vue";
                 }).then(response => {
                     //console.log(response.data);
                     this.listaUsuCar = response.data;
-                    console.log(this.listaUsuCar);
                 }).catch((e) => {
                     this.gestionarError(e);
                 }).finally(() => {
@@ -435,8 +424,6 @@ import LoginLayout from "layouts/LoginLayout.vue";
             },
 
             abrirDialogoUsuarioCargo: function ( idUnidadOrganica, unidadOrganica, idUsuario ) {
-                console.log("abrirDialogoUsuarioCargo => idUnidadOrganica: " + idUnidadOrganica + " - unidadOrganica: " + unidadOrganica + " - idUsuario: " + idUsuario);
-
                 this.obj.usuCar.idCentro = idUnidadOrganica;
                 this.obj.usuCar.unidadOrganica = unidadOrganica;
                 this.dialogo.frmUsuarioCargo = true;
@@ -452,7 +439,6 @@ import LoginLayout from "layouts/LoginLayout.vue";
 
                 this.$axios.post(`${process.env.API_URL}/SSgCargoUsuario?accion=LISTAR`, form, {headers: {'Content-Type': 'multipart/form-data'}
                 }).then(response => {
-                    console.log(response.data);
                     this.listaCargoUsuario = response.data;
                     /*console.log(this.listaUsuCar);*/
                 }).catch((e) => {
@@ -464,8 +450,6 @@ import LoginLayout from "layouts/LoginLayout.vue";
             },
 
             habilitarCargoUsuario: function ( idUsuario, idUnidadOrganica, sfpCargo, flgUsuarioCargoB ) {
-                console.log( "habilitarUsuCar => idUsuario: " + idUsuario + " - idUnidadOrganica: " + idUnidadOrganica +  + " - sfpCargo: " + sfpCargo + " - flgUsuarioCargo: " + flgUsuarioCargoB );
-                // console.log(">>> " + obj.filtro.flgUsuarioActivoB)
                 this.obj.cargoUsuario.idUsuarioReg = this.obj.session.idUsuario;
                 this.obj.cargoUsuario.sfpCentro = idUnidadOrganica;
                 this.obj.cargoUsuario.sfpCargo = sfpCargo;
@@ -478,7 +462,6 @@ import LoginLayout from "layouts/LoginLayout.vue";
 
                 this.$axios.post(`${process.env.API_URL}/SSgCargoUsuario?accion=ACTUALIZAR`, formData, {headers: {'Content-Type': 'multipart/form-data'}
                 }).then(response => {
-                    console.log(response.data);
                     this.mostrarMensaje(flgUsuarioCargoB==true ? 'HABILITADO' : 'DESHABILITADO', 'green', 'check_circle');
                 }).catch((e) => {
                     this.gestionarError(e);
@@ -489,7 +472,6 @@ import LoginLayout from "layouts/LoginLayout.vue";
             },
 
             seleccionarUsuario: function( data ){
-                console.log('seleccionarUsuario: ', data);
                 if( data.tipoRespuesta == '1' ) {
                     this.filtro.idUsuario = data.idUsuario;
                     this.filtro.nomUsuario = data.usuLdap + ' (' + data.apellidosNombres + ' - ' + data.unidadOrganica + ( data.flgDirector == '1' ? ' - Director/a' : '' ) + ')';
@@ -503,7 +485,6 @@ import LoginLayout from "layouts/LoginLayout.vue";
             },
 
             seleccionarSistema: function( data ){
-                console.log('seleccionarSistema: ', data);
                 if( data.tipoRespuesta == '1' ) {
                     this.filtro.idSistema = data.idSistema;
                     this.filtro.sisNombre = data.sisNombre;

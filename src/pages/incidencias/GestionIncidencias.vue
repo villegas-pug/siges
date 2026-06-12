@@ -366,7 +366,6 @@ export default {
 
     },
     eventoSeleccionDependencia: function (dependenciaSeleccionada) {
-      console.log(dependenciaSeleccionada);
     },
     eventoOpcLimpiarUnidadOrganica: function () {
       this.persona.unidadOrganica = null;

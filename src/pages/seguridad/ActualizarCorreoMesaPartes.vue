@@ -186,7 +186,6 @@
             this.init();
 
             let date = new Date();
-            console.log(this.$q.localStorage.getItem('mda-correoInstitucional'));
         },
         methods: {
             init: function(){
@@ -202,7 +201,6 @@
             },
 
             cargarDatos: function () {
-                console.log('cargarDatos');
                 this.cargando.btnConsultarDatos = true;
 
                 let nroDocumento = this.filtro.nroDocumento=='' ? 'SF' : this.filtro.nroDocumento;
@@ -213,7 +211,6 @@
 
                 this.$axios.post(`${process.env.API_URL}/SMpUsuario?accion=LISTAR`, form, {headers: {'Content-Type': 'multipart/form-data'}
                 }).then(response => {
-                    console.log("DATA: ", response.data);
                     this.obj.mpUsuario = response.data[0];
                     this.datosTmp.motivo = '';
                     this.datosTmp.correoNuevo = '';
@@ -226,8 +223,6 @@
             },
 
             validar: function( nombreObj, accion, tipo, obj=null ){
-                console.log("validar => accion: ",accion ," - tipo: ", tipo," - obj: ", obj," - nombre obj: ", nombreObj);
-
                 this.datosTmp.nombreObj = nombreObj;
                 this.obj.mpUsuario = obj==null ? this.obj.mpUsuario : Vue.util.extend({}, obj);
                 this.datosTmp.accion[0] = accion;
@@ -264,15 +259,12 @@
 
                 // ************************************************ //
                 if ( flagObligatorio == 1 || flagInconsistente == 1 ) {
-                    console.log("MENSAJE");
                     msj = (flagObligatorio == 1 ? msjObligatorio : '') + (flagInconsistente == 1 ? (flagObligatorio == 1 ? '<br>' : '') + msjInconsistente : '');
                     this.abrirDialogoMensajeSistema( 'MENSAJE', obj , msj, '' );
                 } else if ( flagAdvertencia == 1 ) {
-                    console.log("CONFIRMACION");
                     msj = msjAdvertencia;
                     this.abrirDialogoMensajeSistema( 'CONFIRMACION', obj , msj, '¿Desea continuar?' );
                 } else {
-                    console.log("SIN ERRORES");
                     this.obj.mpUsuario.idUsuarioReg = this.obj.session.idUsuario;
                     if ( nombreObj == 'MP_USUARIO' && accion == 'ACTUALIZAR' && tipo == '*' ) {  this.actualizarCorreo(); }
                 }
@@ -287,8 +279,6 @@
             },
 
             actualizarCorreo: function (){
-                console.log("actualizarCorreo");
-
                 this.obj.mpUsuario.tipo = 'ACTUALIZAR_CORREO';
                 this.cargando.btnActualizarDatos = true;
                 this.obj.mpUsuario.cadena = this.obj.session.idUsuario + ';' + this.obj.mpUsuario.idUsuario + ';' + this.obj.mpUsuario.usuPersona + ';' + this.obj.mpUsuario.usuNombre + ';' + this.datosTmp.correoNuevo + ';' + this.datosTmp.motivo;

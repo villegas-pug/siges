@@ -591,11 +591,8 @@
 
             },
             cargarListaDepartamentos: function () {
-                console.log("cargarListaDepartamentos");
-
                 this.$axios.get("https://srvapp01.inabif.gob.pe:8443/SRH/SUbigeo?action=departamentos")
                     .then(response=>{
-                        console.log("Departamentos: ",response.data);
                         this.options.departamento = response.data;
                         this.options.departamentoBusqueda = response.data;
                     });
@@ -608,7 +605,6 @@
                 })
             },
             seleccionarDepartamento: function(val){
-                console.log("seleccionarDepartamento: ", val);
                 this.obj.tercero.codProvincia = null;
                 this.obj.tercero.codDistrito = null;
                 this.options.distrito = [];
@@ -631,7 +627,6 @@
                 })
             },
             seleccionarProvincia: function(val){
-                console.log("seleccionarProvincia: ", val);
                 this.obj.tercero.codDistrito = null;
                 this.cargarListaDistritos(val)
             },
@@ -652,8 +647,6 @@
                 })
             },
             seleccionarDistrito: function(val){
-                console.log("seleccionarDistrito: ", val);
-
                 this.obj.tercero.perDirUbigeo = this.obj.tercero.codDistrito;
                 this.obj.tercero.pnDepartamento = (this.options.departamento.filter( c => c.id == this.obj.tercero.codDepartamento)[0].descripcion );
                 this.obj.tercero.pnProvincia = (this.options.provincia.filter( c => c.id == this.obj.tercero.codProvincia)[0].descripcion );
@@ -661,21 +654,13 @@
             },
 
             cargarListaCatalogo: function(){
-                console.log("cargarListaCatalogo");
-
                 let form = new FormData()
                 form.append('obj', JSON.stringify({ tipo: 'REGISTRO-TERCERO', valor: this.idUsuarioSession } ));
 
                 //this.$axios.post("https://srvapp01.inabif.gob.pe:8443/SRH/STgCatalogo?accion=GRUPO", form, {headers: {'Content-Type': 'multipart/form-data'}
                 this.$axios.post("http://localhost:8084/SRH/STgCatalogo?accion=GRUPO", form, {headers: {'Content-Type': 'multipart/form-data'}
                 }).then(response => {
-                    console.log(">>> STgCatalogo => data: ",response.data);
                     this.options.catalogo = response.data;
-
-                    console.log(1);
-                    console.log(this.options.catalogo.listaEstadoCivil);
-                    console.log(this.options.catalogo.listaTipoDocumento);
-                    console.log(2);
 
                     //this.options.ficha.filtro.estadoConserv = this.options.catalogo.estadoConserv.slice();
                     //this.options.ficha.filtro.estadoConserv.splice(0,0,{idCatalogo:"SF",catDescripcion:"TODOS"});
@@ -683,8 +668,6 @@
             },
 
             validarPersona: function(){
-                console.log("validarPersona");
-
                 if ( this.datosTmp.perNroDocumentoFiltro.length==8 ){
                     // this.cargando.btncargarTercero = true;
 
@@ -705,8 +688,6 @@
                     //this.$axios.post("https://srvapp01.inabif.gob.pe:8443/SLOG/STgCargo?accion=LISTAR", form, {headers: {'Content-Type': 'multipart/form-data'}
                     this.$axios.post("http://localhost:8084/SLOG/SUsuLocador?accion=LISTAR", form, {headers: {'Content-Type': 'multipart/form-data'}
                     }).then(response => {
-                        console.log(response.data);
-                        console.log(response.data.length);
                         //let objLocador = response.data[0];
 
                         if ( response.data.length == 0 ) {
@@ -716,11 +697,9 @@
                             let objLocador = response.data[0];
 
                             if ( this.obj.tercero.prhEstado == 1 ) {
-                                console.log('PERSONAL')
                                 let msj = 'EL ENCONTRÓ EL/LA PERSONAL ACTIVO: ';
                                 this.abrirDialogoMensajeSistema( 'MENSAJE', null , msj, '' );
                             } else {
-                                console.log('TERCERO REGISTADO NUEVO');
                                 // 60736859
                                 this.obj.tercero.perDocumento = parseInt(objLocador.perDocumento);
                                 this.obj.tercero.perNroDocumento = objLocador.perNroDocumento;
@@ -768,12 +747,9 @@
                 this.$axios
                     .post(`${process.env.API_URL}/SUsuarioPermiso?accion=LISTAR`, form, {headers: {'Content-Type': 'multipart/form-data'}})
                     .then(response => {
-                        console.log("USUARIO PERMISO: ",response);
-                        console.log(response.data.length);
                         if( response.data.length !== 0 ){
                             this.objPermiso = response.data[0];
                         }
-                        console.log("SALIDA: ",this.objPermiso);
 
                     }).finally(() => {
                         //this.cargando = false;
@@ -782,8 +758,6 @@
 
             // FUNCIONES CARGO
             cargarTercero: function() {
-                console.log("Buscar: tipo: ",this.parTipo + " - valor: ",this.objFiltro)
-
                     /*if ( this.objFiltro.carCodSisper.length>0 || this.objFiltro.carNombre.length>2 ){*/
                     // this.cargando.btncargarTercero = true;
 
@@ -817,8 +791,6 @@
 
             },
             abrirDialogoCargo: function ( accion, tipo, fila ) {
-                console.log("abrirDialogoCargo >> accion: ", accion, " - tipo: ", tipo," - fila: ", fila);
-
                 if( accion == 'NUEVO' ) {
                     this.limpiarCargo();
                 }
@@ -833,8 +805,6 @@
 
             },
             validar: function( accion, tipo, obj=null ){
-                console.log("validar => accion: ",accion ," - tipo: ", tipo," - obj: ", obj);
-
                 this.objCargo = obj==null ? this.objCargo : Vue.util.extend({}, obj);
                 this.accion = accion;
                 this.tipo = tipo;
@@ -889,7 +859,6 @@
                 }
             },
             abrirDialogoMensajeSistema: function( tipo, fila, msjDescripcion, msjPreguntaConfirmacion ){
-                console.log("abrirDialogoMensajeSistema >> tipo: ", tipo, " - fila: ", fila, " - msjDescripcion: ", msjDescripcion, " - msjPreguntaConfirmacion: ", msjPreguntaConfirmacion)
                 this.dialogoMensajeSistema = true;
 
                 this.objCargo = Vue.util.extend({}, fila);
@@ -899,15 +868,12 @@
                 this.msj.tipo = tipo;
             },
             confirmarMensajeSistema: function( tipo ) {
-                console.log("confirmarMensajeSistema");
-
                 this.cargandoBtnAceptarMensajeSistema = true;
                 if (this.accion == 'NUEVO') { this.guardarCargo(tipo); }
                 if (this.accion == 'EDITAR') { this.actualizarCargo(tipo); }
                 if (this.accion == 'ELIMINAR') { this.eliminarCargo('LOGICO'); }
             },
             guardarCargo: function( tipo ){
-                console.log("guardarCargo => tipo: ",tipo);
                 this.objCargo.tipo = tipo;
 
                 let formData = new FormData();
@@ -958,7 +924,6 @@
 
             },
             eliminarCargo: function ( tipo ) {
-                console.log("eliminarCargo => tipo: ", tipo, " - obj: ", this.objCargo);
                 this.objCargo.tipo = tipo;
 
                 let form = new FormData();
@@ -988,7 +953,6 @@
                 this.objCargo.idUsuarioReg = this.idUsuarioSession;
             },
             sisperCargosSeleccionada: function( data ){
-                console.log('sisperCargosSeleccionada: ', data);
                 if( data.tipoRespuesta == '1' ) {
                     this.objCargo.carCodSisper = data.cargoEstructural;
                     this.objCargo.carNombre = data.nomCargoEstruc;
@@ -1002,11 +966,9 @@
 
 
             validarReniec: function ( data ){
-                console.log('validarReniec => ', data);
             },
 
             seleccionarUnidadOrganicaFiltro: function( data ){
-                console.log('seleccionarUnidadOrganicaFiltro => ', data);
                 /*if( data.tipoRespuesta == '1' ) {
                     this.objCargo.carCodSisper = data.cargoEstructural;
                     this.objCargo.carNombre = data.nomCargoEstruc;
@@ -1018,7 +980,6 @@
                 }*/
             },
             seleccionarUnidadOrganica: function( data ){
-                console.log('seleccionarUnidadOrganica => ', data);
                 /*if( data.tipoRespuesta == '1' ) {
                     this.objCargo.carCodSisper = data.cargoEstructural;
                     this.objCargo.carNombre = data.nomCargoEstruc;
@@ -1030,11 +991,9 @@
                 }*/
             },
             seleccionarTipoDocumentoIdentidad: function( data ){
-                console.log('seleccionarTipoDocumentoIdentidad => ', data);
             },
 
             seleccionarOrden: function( data ){
-                console.log('seleccionarOrden => ', data);
             },
 
             filtrarPerFecNacimiento: function ( fecha ) {

@@ -249,7 +249,6 @@ export default {
                       });                 
                 
             } catch (error) {
-                console.error(error);
                 this.$q.notify({
                     type: "negative",
                     message: "Error al subir el archivo"
@@ -269,7 +268,6 @@ export default {
                 // window.open(url, "_blank");
                 // URL.revokeObjectURL(url);
             } catch (error) {
-                console.error(error);
                 this.$q.notify({
                     type: "negative",
                     message: "Error al visualizar el archivo"
