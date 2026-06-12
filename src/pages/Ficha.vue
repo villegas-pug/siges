@@ -2680,7 +2680,8 @@ export default {
                 idDirector: null,
                 idsSupervisados: [],
                 reqDirector: 0,
-                reqSupervisados: 1
+                reqSupervisados: 1,
+                reqObligatoriedad: 1
 
             },
             // MODELOS
@@ -2904,6 +2905,7 @@ export default {
             ],
             validandoConformidad: false,
             loadingCargarPersonal: false,
+            validacionReseteadaEnEdicion: false,
             mostrarInputValidar: {},
             mostrarContrasenaValidar: {},
 
@@ -3170,6 +3172,7 @@ export default {
             if (!this.puedeEditar(row)) return;
             this.modo = "editar";
             try {
+                this.validacionReseteadaEnEdicion = false;
                 this.sincronizarModalidadDesdeFuente(row);
                 this.sincronizarAcreditacionDesdeFuente(row);
                 // Llenamos el form con los datos de la fila seleccionada
@@ -3202,6 +3205,7 @@ export default {
                 }
 
                 this.form.tipoCentro = row.tipoCentro;
+                this.form.reqObligatoriedad = Number(row?.reqObligatoriedad ?? 1);
 
                 // Capturar periodo y tipo desde la fila para modo edición
                 this.fichaPeriodo = row.periodo;
@@ -3365,6 +3369,7 @@ export default {
                 this.form.fechaRegistro = data.fechaRegistro;
                 this.form.audioUrl = data.audioUrl;
                 this.form.reqDirector = Number(data.reqDirector ?? 0);
+                this.form.reqObligatoriedad = Number(data.reqObligatoriedad ?? 1);
                 if (this.puedeMostrarDirector(this.form.reqDirector)) {
                     this.form.respDirector = data.respDirector;
                     this.form.idDirector = this.normalizarIdResponsable(data.idDirector ?? data.idPersonal);
@@ -4135,12 +4140,15 @@ export default {
                         payload
                     );
 
-                    // Resetear validaciones previas al editar
-                    try {
-                        await this.$axios.delete(
-                            `${process.env.API_URL_SIGESU}/resetValidacionAnexoCabecera?idAnexoCabecera=${this.form.idAnexoCabecera}`
-                        );
-                    } catch (resetError) {
+                    // Resetear validaciones previas al editar solo si reqObligatoriedad !== 0
+                    if (Number(this.form.reqObligatoriedad) !== 0) {
+                        try {
+                            await this.$axios.delete(
+                                `${process.env.API_URL_SIGESU}/resetValidacionAnexoCabecera?idAnexoCabecera=${this.form.idAnexoCabecera}`
+                            );
+                            this.validacionReseteadaEnEdicion = true;
+                        } catch (resetError) {
+                        }
                     }
 
                 } else {
@@ -4156,8 +4164,13 @@ export default {
 
                 this.$q.notify({
                     type: "positive",
-                    message: this.modoEdicion ? "Actualizado correctamente. Las validaciones previas han sido reseteadas." : "Registrado correctamente"
+                    message: this.modoEdicion
+                        ? (this.validacionReseteadaEnEdicion
+                            ? "Actualizado correctamente. Las validaciones previas han sido reseteadas."
+                            : "Actualizado correctamente")
+                        : "Registrado correctamente"
                 });
+                this.validacionReseteadaEnEdicion = false;
 
                 this.dialog = false;
                 this.cargarTablaAnexos();
