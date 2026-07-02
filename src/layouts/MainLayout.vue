@@ -56,7 +56,10 @@
                 <div v-for="modulo in menuOrdenado" :key="modulo.descripcion">
 
                     <!-- TÍTULO DEL MÓDULO -->
-                    <q-item-label header class="text-bold">
+                    <q-item-label
+                        v-if="modulo.descripcion !== 'SIGESU'"
+                        header
+                        class="text-bold">
                         {{ modulo.descripcion }}
                     </q-item-label>
 
